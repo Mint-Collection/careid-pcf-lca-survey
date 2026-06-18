@@ -900,19 +900,14 @@ function download(content, name, mime){
 function toast(msg){ const t=document.getElementById('toast'); document.getElementById('toastMsg').textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2800); }
 
 /* ============================================================
-   Google Sheets 수집 연동
-   SHEET_ENDPOINT: GAS 웹앱 /exec URL. 비어 있으면 전송 스킵(로컬 데모 모드).
-   GAS 배포 후 아래 빈 문자열을 받은 URL로 교체하세요.
+   Google Sheets 수집 연동 — SHEET_ENDPOINT 를 GAS /exec URL 로 교체
    ============================================================ */
 const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxOdlJCEqOjfwLvXeGowSU_sGg6sZ4oICN09JD024kv82uC00FcglcE1Wj2p-y9mNuY/exec";
 
 async function sendToSheet(payload){
   if(!SHEET_ENDPOINT) return;
-  try{
-    await fetch(SHEET_ENDPOINT, { method:'POST', body: JSON.stringify(payload) });
-  } catch(err){
-    console.warn('[CARE ID] 시트 전송 실패 (로컬 데이터는 보존됨):', err);
-  }
+  try{ await fetch(SHEET_ENDPOINT, { method: "POST", body: JSON.stringify(payload) }); }
+  catch(err){ console.warn("[CARE ID] 시트 전송 실패 (로컬 데이터는 보존됨):", err); }
 }
 
 /* ============================================================
@@ -1057,8 +1052,7 @@ function doSignup(){
   const createdAt = new Date().toISOString();
   accs[id]={ company, bizno, manager, email, pw:hashPw(pw), createdAt };
   saveAccounts(accs); setSession(id); enterForm(accs[id]); toast('회원가입이 완료되었습니다. 작성을 시작해 주세요.');
-  // 회원 정보를 스프레드시트로 전송 (비밀번호는 전송하지 않음)
-  sendToSheet({ action:'signup', createdAt, company, bizno, manager, email });
+  sendToSheet({ action:"signup", createdAt, company, bizno, manager, email });
 }
 function doLogin(){
   const idin=v('li_id'), pw=v('li_pw');
@@ -1116,15 +1110,15 @@ function validateRequired(){
 async function doSubmit(){
   const miss=validateRequired();
   if(miss.length){
-    toast(‘필수 항목 ‘+miss.length+’개가 비어 있습니다. 표시된 칸을 채워 주세요.’);
-    miss[0].el.scrollIntoView({behavior:’smooth’, block:’center’}); try{ miss[0].el.focus(); }catch(e){}
+    toast('필수 항목 '+miss.length+'개가 비어 있습니다. 표시된 칸을 채워 주세요.');
+    miss[0].el.scrollIntoView({behavior:'smooth', block:'center'}); try{ miss[0].el.focus(); }catch(e){}
     return;
   }
-  if(!confirm(‘작성하신 내용을 제출하시겠습니까?\n제출 후에도 \’수정하기\’로 다시 제출할 수 있습니다.’)) return;
+  if(!confirm('작성하신 내용을 제출하시겠습니까?\n제출 후에도 수정하기로 다시 제출할 수 있습니다.')) return;
   const d=collect(); const acc=currentAccount()||{};
   const sub={
-    action:’submit’,
-    _meta:{ form:’CARE_ID_PCF_LCA’, project:’RS-2026-25540842’, version:’submit-v1’ },
+    action: "submit",
+    _meta:{ form:'CARE_ID_PCF_LCA', project:'RS-2026-25540842', version:'submit-v1' },
     account:{ company:acc.company, bizno:acc.bizno, manager:acc.manager, email:acc.email },
     submittedAt:new Date().toISOString(),
     raw:{ fields:d.fields, chips:d.chips, groups:d.groups },
@@ -1133,12 +1127,11 @@ async function doSubmit(){
   };
   const id=getSession(); if(id){ LS.set(subKey(id), JSON.stringify(sub)); LS.set(draftKey(id), JSON.stringify(d)); }
   window.__submission=sub;
-  // 제출 데이터를 스프레드시트로 전송 (실패해도 로컬 저장·JSON 다운로드로 보존)
-  const btnSubmit=document.querySelector(‘[onclick="doSubmit()"]’);
-  if(btnSubmit){ btnSubmit.disabled=true; btnSubmit.textContent=’전송 중...’; }
+  const btn=document.querySelector('[onclick="doSubmit()"]');
+  if(btn){ btn.disabled=true; btn.textContent="전송 중..."; }
   try{ await sendToSheet(sub); } catch(e){}
-  if(btnSubmit){ btnSubmit.disabled=false; btnSubmit.innerHTML=’<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>제출하기’; }
-  renderSubmission(sub); showView(‘done’);
+  if(btn){ btn.disabled=false; btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>제출하기'; }
+  renderSubmission(sub); showView('done');
 }
 function downloadSubmission(){
   const sub=window.__submission; if(!sub){ toast('제출 내용을 찾을 수 없습니다.'); return; }
