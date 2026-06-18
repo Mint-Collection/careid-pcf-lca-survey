@@ -3,1166 +3,1044 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>섬유 PCF · LCA 데이터 통합 수집 설문 · CARE ID</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>공정별 수집 가능 데이터 점검 | 탄소제로 R&D</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
-    --paper:#FCFCFA; --panel:#FFFFFF;
-    --ink:#16181D; --ink2:#5B616B; --ink3:#9AA0A8;
-    --line:#E3E2DC; --line2:#C7C7C0;
-    --blue:#1B4DE4; --blue-deep:#1138A8; --blue-soft:#EAF0FE;
-    --ok:#0E8A5F; --warn:#C0392B; --warn-soft:#FCEDEB;
-    --grid:rgba(20,22,28,.030);
-    --mono:'Space Mono','Pretendard',monospace;
-    --sans:'Pretendard',system-ui,sans-serif;
+    --blue:#0071E3; --blue-dark:#0058B9; --text:#1D1D1F; --sub:#6E6E73; --mut:#86868B;
+    --bg:#F5F5F7; --card:#FFFFFF; --line:#E5E5EA; --line2:#D2D2D7; --red:#E0303A; --r:18px;
   }
-  *{box-sizing:border-box;}
-  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}
-  body{
-    margin:0; color:var(--ink); font-family:var(--sans);
-    font-weight:400; line-height:1.6; font-size:15px;
-    -webkit-font-smoothing:antialiased;
-    background-color:var(--paper);
-    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:34px 34px;
-  }
-  .sheet{position:relative; max-width:1000px; margin:0 auto; padding:24px 26px 90px;}
-  .crop{position:absolute; width:15px; height:15px; pointer-events:none; z-index:1;}
-  .crop.tl{top:8px;left:10px;border-top:1.5px solid var(--ink);border-left:1.5px solid var(--ink);}
-  .crop.tr{top:8px;right:10px;border-top:1.5px solid var(--ink);border-right:1.5px solid var(--ink);}
-  .crop.bl{bottom:8px;left:10px;border-bottom:1.5px solid var(--ink);border-left:1.5px solid var(--ink);}
-  .crop.br{bottom:8px;right:10px;border-bottom:1.5px solid var(--ink);border-right:1.5px solid var(--ink);}
-
-  /* ===== Sticky section nav ===== */
-  .nav{position:sticky; top:0; z-index:40; display:flex; align-items:stretch; gap:0;
-    border:1px solid var(--ink); background:var(--panel); margin-bottom:2px;
-    font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; overflow-x:auto; scrollbar-width:thin;}
-  .nav .brand{padding:9px 13px; font-weight:700; color:var(--ink); border-right:1px solid var(--line2); white-space:nowrap; position:sticky; left:0; background:var(--panel); z-index:2;}
-  .nav a{padding:9px 11px; color:var(--ink2); text-decoration:none; border-right:1px solid var(--line); white-space:nowrap; display:flex; align-items:center; gap:6px;}
-  .nav a:hover{background:var(--blue-soft); color:var(--blue-deep);}
-  .nav a.active{background:var(--ink); color:#fff;}
-  .nav a .dot{width:6px; height:6px; border-radius:50%; border:1px solid currentColor; background:transparent; flex:0 0 auto;}
-  .nav a.done .dot{background:var(--blue); border-color:var(--blue);}
-  .nav a.active.done .dot{background:#fff; border-color:#fff;}
-
-  /* ===== Masthead ===== */
-  .masthead{border:1px solid var(--line2); border-top:none; background:var(--panel); padding:28px 26px 24px;}
-  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.13em; color:var(--blue-deep); margin:0 0 15px; display:flex; align-items:center; gap:8px;}
-  .eyebrow::before{content:"\25A0"; color:var(--blue); font-size:9px;}
-  h1{font-weight:800; font-size:30px; line-height:1.22; letter-spacing:-.02em; margin:0 0 9px; max-width:20em;}
-  .hsub{font-weight:500; font-size:17px; color:var(--ink); line-height:1.42; letter-spacing:-.01em; margin:0 0 16px; max-width:34em;}
-  .lede{font-size:15px; color:var(--ink2); line-height:1.7; max-width:46em; margin:0;}
-  .lede b{color:var(--ink); font-weight:700;}
-  .hl{color:var(--blue-deep); font-weight:700;}
-  .applicant{margin-top:18px; font-family:var(--mono); font-size:11px; color:var(--ink2); letter-spacing:.02em; line-height:1.9;}
-  .applicant b{color:var(--ink); font-weight:700;}
-
-  .glance{display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line2); border-top:none; background:var(--line);}
-  .gfield{background:var(--panel); padding:12px 15px; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
-  .gfield .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.09em; color:var(--ink3); margin-bottom:5px;}
-  .gfield .v{font-size:13px; color:var(--ink); line-height:1.45;}
-  .gfield .v b{font-weight:700;}
-
-  /* ===== How-to strip ===== */
-  .howto{border:1px solid var(--line2); border-top:none; background:var(--blue-soft); padding:14px 20px; display:flex; flex-wrap:wrap; gap:8px 22px; align-items:center;}
-  .howto .ht{font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--blue-deep); font-weight:700;}
-  .howto .hi{font-size:12.5px; color:var(--ink); display:flex; align-items:center; gap:7px;}
-  .howto .hi b{font-weight:700; color:var(--blue-deep);}
-  .howto .hk{font-family:var(--mono); font-size:10px; background:#fff; border:1px solid var(--blue); color:var(--blue-deep); padding:2px 7px; border-radius:2px;}
-
-  /* ===== Section shell ===== */
-  section{border:1px solid var(--line2); border-top:none; background:var(--panel); padding:24px 26px; scroll-margin-top:50px;}
-  .shead{display:flex; align-items:baseline; gap:12px; margin-bottom:6px; padding-bottom:11px; border-bottom:1.5px solid var(--ink);}
-  .shead .snum{font-family:var(--mono); font-size:13px; font-weight:700; color:var(--blue); letter-spacing:.03em;}
-  h2{font-weight:700; font-size:18px; letter-spacing:-.01em; margin:0;}
-  .sub-en{font-family:var(--mono); font-size:10px; color:var(--ink3); letter-spacing:.09em; margin-left:auto; white-space:nowrap;}
-  .sdesc{font-size:13px; color:var(--ink2); margin:11px 0 4px; line-height:1.6; max-width:50em;}
-  .src-note{font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; color:var(--ink3); margin:3px 0 0;}
-  .note-blue{background:var(--blue-soft); border-left:3px solid var(--blue); padding:11px 14px; margin:14px 0 4px; font-size:13px; line-height:1.6; color:var(--ink);}
-  .note-blue b{color:var(--blue-deep); font-weight:700;}
-
-  .subhead{font-family:var(--mono); font-size:11px; letter-spacing:.09em; color:var(--blue-deep); margin:24px 0 12px; padding-top:15px; border-top:1px solid var(--line2); display:flex; gap:8px; align-items:center;}
-  .subhead:first-of-type{border-top:none; padding-top:6px; margin-top:16px;}
-  .subhead::before{content:"\25A0"; color:var(--blue); font-size:8px;}
-
-  /* ===== Inputs ===== */
-  .ig{display:flex; flex-direction:column; gap:5px; min-width:0;}
-  .lab{font-size:12.5px; font-weight:600; color:var(--ink); display:inline-flex; align-items:center; gap:6px; line-height:1.4;}
-  .lab .req{color:var(--warn); font-weight:700;}
-  .lab .opt{font-family:var(--mono); font-size:9px; color:var(--ink3); letter-spacing:.05em; font-weight:400;}
-  input[type=text],input[type=tel],input[type=email],input[type=date],input[type=number],textarea,select{
-    width:100%; font-family:var(--sans); font-size:13.5px; color:var(--ink);
-    background:var(--panel); border:1px solid var(--line2); border-radius:3px;
-    padding:9px 11px; line-height:1.4; transition:border-color .12s, box-shadow .12s;}
-  input::placeholder,textarea::placeholder{color:var(--ink3);}
-  input:focus,textarea:focus,select:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft);}
-  textarea{resize:vertical; min-height:64px;}
-  select{appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235B616B' stroke-width='2.4'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; cursor:pointer;}
-  input.miss,textarea.miss,select.miss{border-color:var(--warn); box-shadow:0 0 0 3px var(--warn-soft);}
-
-  .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:14px 16px;}
-  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 16px;}
-  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px 16px;}
-  .span2{grid-column:span 2;}
-
-  /* ===== Help tooltip ===== */
-  .help{display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%;
-    border:1px solid var(--line2); color:var(--ink3); font-size:10px; font-weight:700; cursor:help; position:relative; flex:0 0 auto; font-family:var(--mono);}
-  .help:hover,.help:focus{border-color:var(--blue); color:var(--blue); background:var(--blue-soft); outline:none;}
-  .help .tip{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
-    width:230px; background:var(--ink); color:#fff; font-family:var(--sans); font-weight:400; font-size:11.5px; line-height:1.5; letter-spacing:0;
-    padding:9px 11px; border-radius:4px; opacity:0; visibility:hidden; transition:opacity .14s; z-index:50; pointer-events:none; box-shadow:0 6px 22px rgba(0,0,0,.22);}
-  .help .tip::after{content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--ink);}
-  .help:hover .tip,.help:focus .tip{opacity:1; visibility:visible;}
-
-  /* ===== Chips (multi-select) ===== */
-  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;}
-  .chip{font-family:var(--sans); font-size:13px; color:var(--ink2); background:var(--panel);
-    border:1px solid var(--line2); border-radius:30px; padding:7px 15px; cursor:pointer; user-select:none; transition:all .12s; line-height:1.2;}
-  .chip:hover{border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft);}
-  .chip.on{background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600;}
-  .chip-etc{display:none; margin-top:10px; max-width:340px;}
-  .chip-etc.show{display:block;}
-
-  /* ===== Dynamic row cards ===== */
-  .rows{margin-top:6px;}
-  .rowcard{position:relative; border:1px solid var(--line2); border-radius:4px; background:var(--paper); padding:16px 18px 16px; margin-bottom:12px;}
-  .rowcard.is-ex{background:repeating-linear-gradient(135deg,#FBFBF7,#FBFBF7 9px,#F4F4EE 9px,#F4F4EE 18px); border-style:dashed;}
-  .rc-head{display:flex; align-items:center; gap:9px; margin-bottom:13px;}
-  .rc-no{font-family:var(--mono); font-size:10px; font-weight:700; color:#fff; background:var(--ink); padding:2px 8px; border-radius:2px; letter-spacing:.04em;}
-  .rowcard.is-ex .rc-no{background:var(--ink3);}
-  .rc-tag{font-family:var(--mono); font-size:9px; letter-spacing:.08em; color:var(--blue-deep); background:var(--blue-soft); padding:2px 7px; border-radius:2px;}
-  .rowcard.is-ex .rc-tag{color:#fff; background:var(--ink3);}
-  .rc-spacer{flex:1;}
-  .rmbtn{font-family:var(--mono); font-size:11px; color:var(--ink2); background:var(--panel); border:1px solid var(--line2); border-radius:3px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:all .12s;}
-  .rmbtn:hover{border-color:var(--warn); color:var(--warn); background:var(--warn-soft);}
-  .rmbtn svg{width:11px; height:11px;}
-
-  .rowbtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:2px;}
-  .addbtn{flex:1; min-width:180px; font-family:var(--sans); font-size:13.5px; font-weight:600; color:var(--blue-deep); background:var(--panel);
-    border:1.5px dashed var(--blue); border-radius:4px; padding:12px; cursor:pointer; transition:all .12s; display:flex; align-items:center; justify-content:center; gap:8px;}
-  .addbtn:hover{background:var(--blue-soft);}
-  .addbtn svg{width:14px; height:14px;}
-  .exbtn{font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--ink2); background:var(--panel); border:1px solid var(--line2); border-radius:4px; padding:0 16px; cursor:pointer; transition:all .12s; white-space:nowrap;}
-  .exbtn:hover{border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft);}
-  .empty{font-size:12.5px; color:var(--ink3); font-style:italic; padding:14px 0 6px; text-align:center; border:1px dashed var(--line); border-radius:4px; margin-bottom:12px;}
-
-
-  /* ===== Action bar ===== */
-  .actions{position:fixed; left:0; right:0; bottom:0; z-index:45; background:var(--panel); border-top:1.5px solid var(--ink);
-    padding:11px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; box-shadow:0 -4px 18px rgba(0,0,0,.06);}
-  .actions .prog{font-family:var(--mono); font-size:11px; color:var(--ink2); letter-spacing:.03em; margin-right:auto; display:flex; align-items:center; gap:9px;}
-  .actions .bar{width:120px; height:6px; background:var(--line); border-radius:3px; overflow:hidden;}
-  .actions .bar span{display:block; height:100%; width:0; background:var(--blue); transition:width .25s;}
-  .btn{font-family:var(--sans); font-size:13px; font-weight:600; border-radius:4px; padding:9px 15px; cursor:pointer; border:1px solid var(--line2); background:var(--panel); color:var(--ink); transition:all .12s; display:inline-flex; align-items:center; gap:7px; white-space:nowrap;}
-  .btn svg{width:14px; height:14px;}
-  .btn:hover{border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft);}
-  .btn.primary{background:var(--blue); border-color:var(--blue); color:#fff;}
-  .btn.primary:hover{background:var(--blue-deep); color:#fff;}
-  .btn.ghost{border-color:var(--line);}
-
-  footer{border:1px solid var(--line2); border-top:none; background:var(--panel); padding:20px 26px; color:var(--ink2); font-size:12px; line-height:1.7;}
-  footer .frow{display:flex; justify-content:space-between; gap:18px; flex-wrap:wrap; align-items:baseline;}
-  footer .org{font-weight:700; color:var(--ink); font-size:13.5px;}
-  footer a{color:var(--blue-deep);}
-  footer .ft-r{font-family:var(--mono); font-size:10px; letter-spacing:.03em; color:var(--ink3);}
-
-  .toast{position:fixed; left:50%; bottom:78px; transform:translateX(-50%) translateY(14px); z-index:60;
-    background:var(--ink); color:#fff; font-size:13px; padding:11px 18px; border-radius:5px; opacity:0; pointer-events:none; transition:all .25s; box-shadow:0 8px 26px rgba(0,0,0,.28); display:flex; align-items:center; gap:9px;}
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-  .toast svg{width:15px; height:15px;}
-
-  :focus-visible{outline:2px solid var(--blue); outline-offset:2px;}
-
-  @media (max-width:760px){
-    .sheet{padding:18px 12px 96px;}
-    h1{font-size:23px;} .hsub{font-size:15px;}
-    .glance{grid-template-columns:1fr;}
-    .gfield{border-right:none;}
-    .grid2,.grid3,.grid4{grid-template-columns:1fr;}
-    .span2{grid-column:auto;}
-    .sub-en{display:none;}
-    .actions{padding:9px 12px;}
-    .actions .prog .bar{width:80px;}
-    .btn{padding:8px 12px; font-size:12px;}
-    .help .tip{width:190px;}
-  }
-
-  @page{margin:13mm;}
-  @media print{
-    body{background:#fff; background-image:none; font-size:10pt; line-height:1.45;}
-    .sheet{max-width:none; padding:0;}
-    .nav,.actions,.toast,.howto,.rowbtns,.rmbtn,.help{display:none !important;}
-    .crop{display:none;}
-    section,.masthead,.glance,footer{break-inside:avoid; border-color:#999;}
-    .rowcard{break-inside:avoid; background:#fff !important;}
-    .rowcard.is-ex{display:none !important;}
-    input,textarea,select{border-color:#bbb; box-shadow:none;}
-    h1{font-size:18pt;} .hsub{font-size:12pt;}
-    .nav a:hover{background:none;}
-  }
-
-  /* ===================== view tabs (primary) ===================== */
-  .viewtabs{position:sticky; top:0; z-index:55; display:flex; gap:0; border:1px solid var(--ink); background:var(--ink); margin-bottom:2px; font-family:var(--mono); letter-spacing:.04em; overflow-x:auto;}
-  .viewtabs button{flex:0 0 auto; padding:11px 22px; background:transparent; color:#c9ccd5; border:none; border-right:1px solid #34373f; cursor:pointer; font-family:inherit; font-size:12px; letter-spacing:.04em; display:flex; align-items:center; gap:8px; transition:all .12s; white-space:nowrap;}
-  .viewtabs button .vn{font-size:9px; opacity:.7; letter-spacing:.06em;}
-  .viewtabs button:hover{background:#23262e; color:#fff;}
-  .viewtabs button.active{background:var(--panel); color:var(--ink); font-weight:700;}
-  .viewtabs button.active .vn{color:var(--blue-deep); opacity:1;}
-  .viewtabs .vt-note{margin-left:auto; align-self:center; padding:0 16px; color:#8f949c; font-size:10px; white-space:nowrap;}
-
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;font-size:16px;word-break:keep-all;-webkit-font-smoothing:antialiased;}
   .hidden{display:none !important;}
-  section{scroll-margin-top:54px;}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px;}
 
-  /* ===================== textarea: native resize + buttons ===================== */
-  textarea.ta-grow{min-height:150px; resize:vertical; overflow:auto;}
-  .ta-tools{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:9px;}
-  .ta-btn{font-family:var(--sans); font-size:12px; font-weight:600; color:var(--blue-deep); background:var(--panel); border:1px solid var(--line2); border-radius:5px; padding:6px 12px; cursor:pointer; transition:all .12s;}
-  .ta-btn:hover{border-color:var(--blue); background:var(--blue-soft);}
-  .resize-hint{display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--ink2);}
-  .resize-hint svg{width:13px; height:13px; stroke:var(--blue); flex:0 0 auto;}
-  .resize-hint b{color:var(--blue-deep); font-weight:700;}
+  /* Cover */
+  #cover{position:fixed;inset:0;background:linear-gradient(180deg,#FBFBFD 0%,#F5F5F7 100%);
+    z-index:100;overflow-y:auto;display:flex;flex-direction:column;}
+  .cover-inner{max-width:620px;margin:auto;padding:56px 28px 40px;text-align:center;width:100%;}
+  .cover-badge{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--blue);
+    background:#EAF3FE;border-radius:980px;padding:7px 16px;margin-bottom:24px;}
+  .cover-num{display:inline-block;font-family:'SF Mono',ui-monospace,monospace;font-size:13px;font-weight:600;
+    color:var(--sub);background:#EDEDF0;border-radius:8px;padding:6px 12px;margin-bottom:18px;letter-spacing:.02em;}
+  .cover-title{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.22;margin-bottom:16px;}
+  .cover-project{font-size:15px;color:var(--sub);line-height:1.55;margin-bottom:28px;}
+  .cover-tag{font-size:13px;color:var(--mut);margin-bottom:6px;}
+  .pw-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:26px 24px;margin:14px auto 26px;max-width:380px;box-shadow:0 2px 14px rgba(0,0,0,.04);}
+  .pw-card h3{font-size:15px;font-weight:600;margin-bottom:14px;}
+  .pw-row{display:flex;gap:8px;}
+  #pw{flex:1;border:1px solid var(--line2);border-radius:12px;padding:13px 14px;font-size:16px;
+    font-family:inherit;outline:none;transition:border-color .15s;text-align:center;letter-spacing:.3em;}
+  #pw:focus{border-color:var(--blue);}
+  .pw-btn{background:var(--blue);color:#fff;border:none;border-radius:12px;padding:0 22px;font-size:15px;
+    font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;}
+  .pw-btn:hover{background:var(--blue-dark);}
+  .shake{animation:sh .45s;}
+  @keyframes sh{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .cover-orgs{font-size:12px;color:var(--mut);line-height:1.8;max-width:540px;margin:0 auto;}
+  .cover-orgs b{color:var(--sub);font-weight:600;}
 
-  /* ===================== per-step image attach ===================== */
-  .step-img{margin-top:14px; padding-top:13px; border-top:1px dashed var(--line2);}
-  .step-img-top{display:flex; align-items:center; gap:11px; flex-wrap:wrap;}
-  .img-add-btn{font-family:var(--sans); font-size:12.5px; font-weight:600; color:var(--blue-deep); background:var(--panel); border:1.5px dashed var(--blue); border-radius:5px; padding:7px 13px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .12s; white-space:nowrap;}
-  .img-add-btn:hover{background:var(--blue-soft);}
-  .img-add-btn svg{width:14px; height:14px;}
-  .step-img-hint{font-size:11px; color:var(--ink3);}
-  .step-thumbs{display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:10px; margin-top:11px;}
-  .step-thumbs:empty{margin-top:0;}
-  .rowcard.drag{border-color:var(--blue) !important; background:var(--blue-soft); box-shadow:0 0 0 3px var(--blue-soft);}
+  /* Footer */
+  .foot{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 30px;text-align:center;}
+  .foot-name{font-size:13px;font-weight:600;color:var(--text);}
+  .foot-line{font-size:12px;color:var(--mut);margin-top:5px;}
+  .foot-line a{color:var(--blue);text-decoration:none;}
 
-  .thumb{position:relative; border:1px solid var(--line2); border-radius:5px; overflow:hidden; background:#fff;}
-  .thumb img{display:block; width:100%; height:96px; object-fit:cover;}
-  .thumb .cap{font-family:var(--mono); font-size:8.5px; color:var(--ink2); padding:4px 7px; border-top:1px solid var(--line); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .thumb .del{position:absolute; top:5px; right:5px; width:21px; height:21px; border-radius:50%; border:none; background:rgba(20,22,28,.8); cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .thumb .del svg{width:11px; height:11px; stroke:#fff;}
+  /* Topbar */
+  #topbar{position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(18px);
+    border-bottom:1px solid var(--line);z-index:30;}
+  .topbar-in{max-width:760px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:12px;}
+  .tb-mark{width:30px;height:30px;border-radius:8px;background:var(--text);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;letter-spacing:-.02em;}
+  .tb-t{font-size:13px;font-weight:600;}
+  .tb-s{font-size:11px;color:var(--mut);margin-top:1px;}
 
-  /* ===================== extract preview document ===================== */
-  .view{padding-bottom:30px;}
-  .preview{border:1px solid var(--line2); border-top:none; background:var(--panel);}
-  .pv-bar{position:sticky; top:44px; z-index:35; display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--blue-soft); border-bottom:1px solid #cdd9fb; padding:12px 22px;}
-  .pv-bar .pv-ttl{font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--blue-deep); font-weight:700; margin-right:auto;}
-  .pv-doc{padding:30px 36px 46px;}
-  .doc-h{border-bottom:2px solid var(--ink); padding-bottom:15px; margin-bottom:4px;}
-  .doc-h .dk{font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; color:var(--blue-deep); margin-bottom:9px; font-weight:700;}
-  .doc-h h3{font-size:23px; font-weight:800; margin:0 0 9px; letter-spacing:-.01em;}
-  .doc-h .meta{font-family:var(--mono); font-size:10.5px; color:var(--ink2); letter-spacing:.02em; line-height:1.85;}
-  .pv-sec{margin-top:24px;}
-  .pv-sec > h4{font-size:13.5px; font-weight:700; margin:0 0 11px; padding:8px 13px; background:var(--ink); color:#fff; letter-spacing:.01em; display:flex; align-items:baseline; gap:9px;}
-  .pv-sec > h4 .en{font-family:var(--mono); font-size:8.5px; opacity:.62; margin-left:auto; letter-spacing:.09em;}
-  .pv-sub{font-family:var(--mono); font-size:10px; letter-spacing:.06em; color:var(--blue-deep); font-weight:700; margin:16px 0 7px;}
-  .kv{display:grid; grid-template-columns:max-content 1fr; border:1px solid var(--line2);}
-  .kv .kk{background:var(--paper); border-right:1px solid var(--line2); border-bottom:1px solid var(--line); padding:8px 13px; font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap;}
-  .kv .vv{border-bottom:1px solid var(--line); padding:8px 13px; font-size:12.5px; color:var(--ink); min-width:0; word-break:break-word;}
-  .kv .vv .muted{color:var(--ink3);}
-  table.pvt{width:100%; border-collapse:collapse; font-size:11.5px; margin-top:2px;}
-  table.pvt th,table.pvt td{border:1px solid var(--line2); padding:6px 9px; text-align:left; vertical-align:top;}
-  table.pvt th{background:var(--ink); color:#fff; font-weight:600; font-size:10.5px; letter-spacing:.02em; white-space:nowrap;}
-  table.pvt tr:nth-child(even) td{background:var(--paper);}
-  .pv-empty{font-size:12px; color:var(--ink3); font-style:italic; padding:9px 0;}
-  .pv-note{font-size:11.5px; color:var(--ink2); background:var(--paper); border-left:3px solid var(--line2); padding:8px 12px; margin:10px 0 0; line-height:1.55;}
-  .pretext{white-space:pre-wrap; font-size:12.5px; line-height:1.65; color:var(--ink);}
+  main{padding:34px 0 10px;}
 
-  .pv-steps{display:flex; flex-direction:column; gap:12px; margin-top:2px;}
-  .pv-step{border:1px solid var(--line2); border-radius:5px; background:var(--paper); padding:13px 15px;}
-  .pv-step-h{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
-  .pv-step-no{font-family:var(--mono); font-size:10px; font-weight:700; color:#fff; background:var(--ink); padding:2px 8px; border-radius:2px;}
-  .pv-step-name{font-size:13.5px; font-weight:700; color:var(--ink);}
-  .pv-step-note{font-family:var(--mono); font-size:10px; color:var(--blue-deep); background:var(--blue-soft); padding:2px 8px; border-radius:2px;}
-  .pv-step-desc{font-size:12.5px; color:var(--ink2); margin-top:6px; line-height:1.55;}
-  .pv-step-imgs{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:11px;}
-  .pv-step-imgs figure{margin:0; border:1px solid var(--line2); border-radius:4px; overflow:hidden; background:#fff;}
-  .pv-step-imgs img{display:block; width:100%; height:auto;}
-  .pv-step-imgs figcaption{font-family:var(--mono); font-size:8.5px; color:var(--ink2); padding:4px 7px; border-top:1px solid var(--line);}
+  /* Hero */
+  .hero{margin-bottom:26px;}
+  .hero-badge{display:inline-block;font-size:12px;font-weight:600;color:var(--blue);background:#EAF3FE;
+    border-radius:980px;padding:6px 14px;margin-bottom:16px;}
+  .hero h1{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.25;margin-bottom:12px;}
+  .hero p{font-size:15px;color:var(--sub);line-height:1.6;}
 
-  @media (max-width:760px){
-    .viewtabs button{padding:10px 13px; font-size:11px;}
-    .viewtabs .vt-note{display:none;}
-    .pv-doc{padding:20px 14px 34px;}
-    .pv-bar{padding:10px 13px;}
-    .kv{grid-template-columns:1fr;}
-    .kv .kk{border-right:none;}
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 22px;
+    margin-bottom:16px;box-shadow:0 1px 8px rgba(0,0,0,.03);}
+  .card-h{font-size:18px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
+  .card-sub{font-size:13px;color:var(--mut);margin-bottom:18px;}
+
+  /* Explanation */
+  .info-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 22px;
+    margin-bottom:16px;box-shadow:0 1px 8px rgba(0,0,0,.03);}
+  .info-sec{margin-bottom:18px;}
+  .info-sec:last-of-type{margin-bottom:14px;}
+  .info-sec h4{font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:7px;display:flex;align-items:center;gap:8px;}
+  .info-sec h4 .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;}
+  .info-sec p{font-size:13.5px;color:var(--sub);line-height:1.65;}
+  .info-sec p b{color:var(--text);font-weight:600;}
+  .info-safe{background:#F0FAF3;border:1px solid #D6EFDE;border-radius:12px;padding:13px 15px;
+    font-size:13px;color:#1E7A46;line-height:1.6;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;}
+  .field label .opt{color:var(--mut);font-weight:400;}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--line2);border-radius:12px;padding:13px 14px;
+    font-size:16px;font-family:inherit;outline:none;background:var(--card);transition:border-color .15s;color:var(--text);}
+  .field textarea{resize:vertical;line-height:1.5;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
+  .field input.err,.field select.err{border-color:var(--red);}
+  .intro-msg{display:none;color:var(--red);font-size:13px;margin-top:4px;}
+
+  .chip-label{font-size:12px;font-weight:600;color:var(--mut);margin:18px 0 8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--blue-dark);
+    background:#EAF3FE;border-radius:980px;padding:7px 13px 7px 11px;}
+  .chip svg{width:15px;height:15px;}
+
+  .org-header{display:flex;align-items:center;gap:14px;}
+  .oh-icons{display:flex;gap:6px;flex-wrap:wrap;}
+  .oh-icon{width:38px;height:38px;border-radius:10px;background:#EAF3FE;color:var(--blue);
+    display:flex;align-items:center;justify-content:center;}
+  .oh-icon svg{width:20px;height:20px;}
+  .oh-name{font-size:17px;font-weight:700;letter-spacing:-.01em;}
+  .oh-stage{font-size:12px;color:var(--mut);margin-top:2px;}
+
+  .legend{background:#FAFAFC;border:1px solid var(--line);}
+  .legend-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;}
+  .legend-row{font-size:13px;color:var(--sub);line-height:1.55;}
+  .legend-row b{color:var(--text);font-weight:600;}
+  .legend-scale{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;}
+  .legend-scale span{font-size:12px;color:var(--sub);}
+  .legend-scale b{color:var(--blue-dark);font-weight:600;}
+  .legend-src{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .legend-src .src-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+
+  /* Source tags */
+  .src-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;
+    vertical-align:middle;letter-spacing:.02em;}
+  .src-tag.in-title{margin-left:8px;}
+  .src-kotiti{background:#E7F6EC;color:#1E7A46;}
+  .src-export{background:#EAF3FE;color:#1B64DA;}
+  .src-both{background:#F3ECFF;color:#7C3AED;}
+
+  .track-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--blue-dark);
+    background:#EAF3FE;border-radius:980px;padding:7px 15px 7px 12px;margin-bottom:12px;}
+  .track-tag svg{width:16px;height:16px;}
+
+  .subhead{font-size:13px;font-weight:700;color:var(--blue-dark);margin:24px 0 12px;padding-bottom:8px;
+    border-bottom:1px solid var(--line);display:flex;align-items:center;flex-wrap:wrap;}
+  .subhead:first-child{margin-top:2px;}
+
+  .q{margin-bottom:18px;}
+  .q-row{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;}
+  .q-label{font-size:15px;font-weight:500;color:var(--text);line-height:1.45;flex:1;}
+  .q-tag{flex-shrink:0;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;margin-top:1px;}
+  .tag-reg{color:#B45309;background:#FFF4E5;}
+  .tag-co2{color:#1E7A46;background:#E7F6EC;}
+  .tag-trace{color:#1B64DA;background:#E8F1FE;}
+  .tag-verify{color:#7C3AED;background:#F3ECFF;}
+  .tag-conn{color:#475569;background:#EEF1F4;}
+
+  /* help (?) icon + tooltip */
+  .help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    border:1.3px solid var(--mut);color:var(--mut);font-size:10px;font-weight:700;margin-left:6px;cursor:help;
+    position:relative;vertical-align:middle;line-height:1;flex-shrink:0;}
+  .help:hover,.help:focus{border-color:var(--blue);color:var(--blue);outline:none;}
+  .help .tip{display:none;position:absolute;bottom:150%;left:50%;transform:translateX(-50%);
+    width:max-content;max-width:min(250px,74vw);background:#1D1D1F;color:#fff;font-size:12px;font-weight:400;
+    line-height:1.55;padding:10px 13px;border-radius:11px;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:60;
+    text-align:left;white-space:normal;letter-spacing:0;}
+  .help .tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:#1D1D1F;}
+  .help:hover .tip,.help:focus .tip{display:block;}
+
+  .seg{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+  .seg-opt{flex:1 1 auto;min-width:62px;}
+  .seg-opt input{position:absolute;opacity:0;width:0;height:0;}
+  .seg-opt span{display:block;text-align:center;padding:10px 8px;border:1px solid var(--line2);border-radius:11px;
+    font-size:13px;color:var(--sub);cursor:pointer;transition:all .14s;background:var(--card);white-space:nowrap;}
+  .seg-opt span:hover{border-color:var(--blue);color:var(--text);}
+  .seg-opt input:checked + span{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
+
+  .etc-input{display:none;width:100%;border:1px solid var(--line2);border-radius:11px;padding:11px 13px;
+    font-size:15px;font-family:inherit;outline:none;margin-top:9px;transition:border-color .15s;}
+  .etc-input:focus{border-color:var(--blue);}
+
+  .opts{display:flex;flex-direction:column;gap:9px;}
+  .check-item{display:flex;align-items:center;gap:11px;cursor:pointer;}
+  .ci-box{width:22px;height:22px;border:1.5px solid var(--line2);border-radius:7px;flex-shrink:0;
+    cursor:pointer;transition:all .14s;position:relative;}
+  .check-item.checked .ci-box{background:var(--blue);border-color:var(--blue);}
+  .check-item.checked .ci-box::after{content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+  .ci-label{font-size:15px;color:var(--text);cursor:pointer;}
+
+  /* PCF 현황표 / LCI 양식 */
+  .pcf-note{background:#EAF3FE;border:1px solid #CFE4FD;border-radius:12px;padding:13px 15px;
+    font-size:13px;color:var(--blue-dark);line-height:1.6;margin-bottom:18px;}
+  .pcf-note b{font-weight:700;}
+  .pcf-sub{font-size:12px;color:var(--mut);margin:-4px 0 14px;line-height:1.5;}
+  .pcf-q{display:flex;align-items:center;margin-bottom:8px;font-size:15px;font-weight:500;color:var(--text);line-height:1.45;}
+  .pcf-in{display:block;width:100%;border:1px solid var(--line2);border-radius:12px;padding:12px 14px;
+    font-size:16px;font-family:inherit;outline:none;background:var(--card);transition:border-color .15s;
+    color:var(--text);resize:vertical;line-height:1.5;}
+  .pcf-in:focus{border-color:var(--blue);}
+  .pcf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .pcf-grid .q{margin-bottom:0;}
+
+  /* dynamic table rows */
+  .meter-row{border:1px solid var(--line2);border-radius:13px;padding:14px;margin-bottom:11px;background:#FAFAFC;}
+  .meter-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .meter-row-head span{font-size:12px;font-weight:700;color:var(--blue-dark);}
+  .meter-del{background:none;border:none;color:var(--mut);font-size:12px;font-family:inherit;cursor:pointer;padding:2px 4px;}
+  .meter-del:hover{color:var(--red);}
+  .meter-grid{display:flex;flex-direction:column;gap:8px;}
+  .meter-grid input{width:100%;border:1px solid var(--line2);border-radius:10px;padding:10px 12px;
+    font-size:14px;font-family:inherit;outline:none;background:var(--card);transition:border-color .15s;}
+  .meter-grid input:focus{border-color:var(--blue);}
+  .meter-add{background:var(--card);border:1px dashed var(--line2);border-radius:11px;padding:11px;
+    font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;font-family:inherit;width:100%;
+    transition:all .15s;margin-bottom:8px;}
+  .meter-add:hover{border-color:var(--blue);background:#F5F9FF;}
+
+  .q.q-error .q-label{color:var(--red);}
+  .q.q-error::after{content:"응답이 필요합니다";display:block;color:var(--red);font-size:12px;margin-top:7px;font-weight:500;}
+
+  .btn-row{display:flex;gap:10px;margin:8px 0 30px;}
+  .btn{border:none;border-radius:13px;padding:15px 22px;font-size:16px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:all .15s;}
+  .btn-primary{background:var(--blue);color:#fff;flex:1;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-ghost{background:var(--card);color:var(--sub);border:1px solid var(--line2);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--mut);}
+
+  .done-card{text-align:center;padding:40px 24px;}
+  .done-ico{width:64px;height:64px;border-radius:50%;background:#E7F6EC;color:#1E9E54;display:flex;
+    align-items:center;justify-content:center;margin:0 auto 18px;}
+  .done-ico svg{width:32px;height:32px;}
+  .done-card h2{font-size:22px;font-weight:700;margin-bottom:10px;}
+  .done-card p{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:22px;}
+
+  @media (max-width:520px){
+    .cover-title{font-size:27px;} .hero h1{font-size:24px;}
+    .seg-opt{min-width:calc(33.33% - 5px);}
+    .q-label{font-size:14px;}
+    .pcf-grid{grid-template-columns:1fr;}
   }
-
-  @media print{
-    .viewtabs,.pv-bar,.vt-note{display:none !important;}
-    .img-add-btn,.step-img-hint,.step-img input{display:none !important;}
-    .preview{border:none;}
-    .pv-doc{padding:0;}
-    .pv-sec > h4{background:#222 !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    table.pvt th{background:#222 !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    .kv .kk{background:#f3f3ef !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-  }
-
-  /* ===================== auth (signup / login) ===================== */
-  .auth-wrap{display:flex; align-items:flex-start; justify-content:center; padding:46px 16px 60px;}
-  .auth-card{width:100%; max-width:450px; border:1px solid var(--line2); background:var(--panel); box-shadow:0 12px 44px rgba(20,22,28,.08);}
-  .auth-top{padding:26px 30px 0;}
-  .auth-top .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; color:var(--blue-deep); margin:0 0 12px; display:flex; align-items:center; gap:8px;}
-  .auth-top .eyebrow::before{content:"\25A0"; color:var(--blue); font-size:8px;}
-  .auth-top h2{font-size:20px; font-weight:800; margin:0 0 6px; letter-spacing:-.01em;}
-  .auth-top p{font-size:12.5px; color:var(--ink2); margin:0; line-height:1.55;}
-  .auth-tabs{display:flex; border-bottom:1px solid var(--line2); margin-top:20px;}
-  .auth-tabs button{flex:1; padding:13px; background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink3); transition:all .12s;}
-  .auth-tabs button.active{color:var(--blue-deep); border-bottom-color:var(--blue);}
-  .auth-body{padding:22px 30px 28px;}
-  .auth-field{margin-bottom:13px;}
-  .auth-field label{display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:5px;}
-  .auth-field label .req{color:var(--warn);}
-  .auth-field input{width:100%; font-family:var(--sans); font-size:13.5px; color:var(--ink); background:var(--panel); border:1px solid var(--line2); border-radius:4px; padding:10px 12px; line-height:1.4;}
-  .auth-field input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft);}
-  .auth-field input.miss{border-color:var(--warn); box-shadow:0 0 0 3px var(--warn-soft);}
-  .auth-row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-  .auth-msg{font-size:12px; color:var(--warn); min-height:17px; margin:4px 0 6px; line-height:1.4;}
-  .auth-submit{width:100%; padding:12px; font-family:var(--sans); font-size:14px; font-weight:700; color:#fff; background:var(--blue); border:1px solid var(--blue); border-radius:5px; cursor:pointer; transition:all .12s;}
-  .auth-submit:hover{background:var(--blue-deep);}
-  .auth-foot{font-size:11px; color:var(--ink3); margin-top:15px; line-height:1.65; border-top:1px solid var(--line); padding-top:13px;}
-
-  /* ===================== account bar (in form) ===================== */
-  .acct-bar{display:flex; align-items:center; gap:11px; border:1px solid var(--line2); border-top:none; background:var(--blue-soft); padding:11px 22px; flex-wrap:wrap;}
-  .acct-bar .badge{font-family:var(--mono); font-size:9px; letter-spacing:.06em; color:var(--blue-deep); border:1px solid var(--blue); border-radius:3px; padding:3px 8px; white-space:nowrap;}
-  .acct-bar .who{font-size:13px; color:var(--ink);}
-  .acct-bar .who b{font-weight:700; color:var(--blue-deep);}
-  .acct-bar .sp{flex:1;}
-  .acct-bar .lo{font-family:var(--sans); font-size:12px; font-weight:600; color:var(--ink2); background:var(--panel); border:1px solid var(--line2); border-radius:5px; padding:6px 13px; cursor:pointer; transition:all .12s;}
-  .acct-bar .lo:hover{border-color:var(--warn); color:var(--warn); background:var(--warn-soft);}
-
-  /* ===================== submit-complete screen ===================== */
-  .done-banner{border:1px solid var(--line2); border-top:none; background:var(--panel); padding:36px 30px 30px; text-align:center;}
-  .done-banner .chk{width:58px; height:58px; border-radius:50%; background:var(--blue-soft); border:2px solid var(--blue); display:flex; align-items:center; justify-content:center; margin:0 auto 17px;}
-  .done-banner .chk svg{width:30px; height:30px; stroke:var(--blue);}
-  .done-banner h2{font-size:22px; font-weight:800; margin:0 0 9px; letter-spacing:-.01em;}
-  .done-banner p{font-size:13.5px; color:var(--ink2); margin:0 auto; max-width:36em; line-height:1.65;}
-  .done-banner .stamp{font-family:var(--mono); font-size:10.5px; color:var(--ink3); margin-top:12px; letter-spacing:.02em;}
-  .done-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:22px;}
-  .done-actions .btn{font-family:var(--sans); font-size:13px; font-weight:600; border-radius:5px; padding:10px 16px; cursor:pointer; border:1px solid var(--line2); background:var(--panel); color:var(--ink); display:inline-flex; align-items:center; gap:7px; transition:all .12s;}
-  .done-actions .btn svg{width:15px; height:15px;}
-  .done-actions .btn:hover{border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft);}
-  .done-actions .btn.primary{background:var(--blue); border-color:var(--blue); color:#fff;}
-  .done-actions .btn.primary:hover{background:var(--blue-deep); color:#fff;}
-  .done-doc{border:1px solid var(--line2); border-top:none; background:var(--panel);}
-
-  @media print{
-    .acct-bar,.done-banner .done-actions,.done-actions{display:none !important;}
-    .done-doc{border:none;}
-  }
-
-  /* ===================== section separation — clearer 01·02·03 boundaries ===================== */
-  main{ display:block; padding-top:2px; }
-  section{
-    border:1px solid var(--line2);          /* full border (override border-top:none) */
-    background:var(--panel);
-    padding:0 26px 26px;                     /* header band provides the top */
-    margin-top:22px;                         /* clear gap between sections */
-    scroll-margin-top:16px;
-    box-shadow:0 1px 3px rgba(20,22,28,.045);
-  }
-  main > section:first-child{ margin-top:20px; }
-  .shead{
-    margin:0 -26px 18px;                     /* full-bleed header band */
-    padding:15px 26px 13px;
-    background:linear-gradient(180deg,#FBFCFF 0%,var(--paper) 100%);
-    border-top:3px solid var(--blue);        /* navy accent = a new section starts here */
-    border-bottom:1px solid var(--line2);
-    display:flex; align-items:center; gap:13px;
-  }
-  .shead .snum{
-    font-family:var(--mono); font-size:14px; font-weight:700; letter-spacing:.05em;
-    color:#fff; background:var(--ink);
-    padding:5px 11px; border-radius:4px; line-height:1;
-    box-shadow:0 1px 2px rgba(20,22,28,.2);
-  }
-  .shead h2{ font-size:16.5px; font-weight:800; letter-spacing:-.01em; color:var(--ink); margin:0; }
-  .shead .sub-en{ margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--ink3); white-space:nowrap; }
-  .sdesc{ margin-top:2px; }
-  .subhead:first-of-type{ margin-top:14px; }
-
-  @media (max-width:760px){
-    section{ padding:0 16px 20px; margin-top:16px; }
-    .shead{ margin:0 -16px 16px; padding:13px 16px 11px; }
-    .shead .sub-en{ display:none; }
-  }
-
-  /* ===================== hidden admin shortcut (※) ===================== */
-  .admin-dot{ cursor:pointer; user-select:none; padding:0 2px; border-radius:2px; transition:color .12s, background .12s; }
-  .admin-dot:hover{ color:var(--blue-deep); background:var(--blue-soft); }
-  .acct-bar.admin{ background:var(--warn-soft); border-color:#E7B9B0; }
-  .acct-bar.admin .badge{ color:#fff; background:var(--warn); border-color:var(--warn); }
-  .acct-bar.admin .who b{ color:var(--warn); }
-
 </style>
 </head>
 <body>
-<div class="sheet">
-  <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
 
-  <div id="view-auth">
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <div class="auth-top">
-          <p class="eyebrow">CARE ID · 섬유 PCF·LCA 데이터 수집</p>
-          <h2>기업 회원 로그인</h2>
-          <p>데이터를 작성·제출하는 기업을 구분하기 위해 로그인이 필요합니다. 처음이시면 회원가입을 진행해 주세요.</p>
-        </div>
-        <div class="auth-tabs">
-          <button type="button" data-m="login" class="active" onclick="authMode('login')">로그인</button>
-          <button type="button" data-m="signup" onclick="authMode('signup')">회원가입</button>
-        </div>
-        <div class="auth-body">
-          <div id="au-login">
-            <div class="auth-field"><label>사업자등록번호 또는 이메일 <span class="req">*</span></label><input id="li_id" type="text" placeholder="예) 123-45-67890 또는 name@company.com"></div>
-            <div class="auth-field"><label>비밀번호 <span class="req">*</span></label><input id="li_pw" type="password" placeholder="비밀번호"></div>
-            <div class="auth-msg" id="li_msg"></div>
-            <button type="button" class="auth-submit" onclick="doLogin()">로그인</button>
-          </div>
-          <div id="au-signup" class="hidden">
-            <div class="auth-field"><label>기업명 <span class="req">*</span></label><input id="su_company" type="text" placeholder="예) ㈜휴비스"></div>
-            <div class="auth-field"><label>사업자등록번호 <span class="req">*</span> <span style="font-weight:400;color:var(--ink3);font-size:11px">(로그인 ID로 사용)</span></label><input id="su_bizno" type="text" placeholder="예) 123-45-67890"></div>
-            <div class="auth-row2">
-              <div class="auth-field"><label>담당자 성명</label><input id="su_manager" type="text" placeholder="예) 홍길동"></div>
-              <div class="auth-field"><label>이메일 <span class="req">*</span></label><input id="su_email" type="email" placeholder="name@company.com"></div>
-            </div>
-            <div class="auth-row2">
-              <div class="auth-field"><label>비밀번호 <span class="req">*</span></label><input id="su_pw" type="password" placeholder="4자 이상"></div>
-              <div class="auth-field"><label>비밀번호 확인 <span class="req">*</span></label><input id="su_pw2" type="password" placeholder="다시 입력"></div>
-            </div>
-            <div class="auth-msg" id="su_msg"></div>
-            <button type="button" class="auth-submit" onclick="doSignup()">회원가입 후 시작</button>
-          </div>
-          <p class="auth-foot"><span class="admin-dot" onclick="adminLogin()" title="관리자 로그인" role="button" tabindex="0">※</span> 본 화면은 데이터 수집 프로토타입입니다. 계정·작성 내용은 현재 사용 중인 브라우저에 저장됩니다(서버 미연동). 실제 운영 시 안전한 서버 계정으로 대체됩니다. 평소 쓰는 비밀번호와 동일한 값은 입력하지 마세요.</p>
-        </div>
+<!-- COVER -->
+<div id="cover">
+  <div class="cover-inner">
+    <div class="cover-badge">1차년도 공식 사전조사</div>
+    <div class="cover-num">RS-2026-25540842</div>
+    <div class="cover-title">공정별<br>수집 가능 데이터 점검</div>
+    <div class="cover-project">유럽 에코디자인규정(ESPR) 대응 수출 주력 섬유제품(의류)<br>PCF 30%↑ 저감 통합 제조기술 및 K-DPP 최적화 모델 개발</div>
+
+    <div class="pw-card">
+      <h3>접속 비밀번호를 입력해 주세요</h3>
+      <div class="pw-row" id="pwBox">
+        <input id="pw" type="password" placeholder="비밀번호 입력" maxlength="20" autocomplete="off">
+        <button class="pw-btn" onclick="checkPw()">확인</button>
       </div>
     </div>
+
+    <div class="cover-tag">주관 ㈜이새에프앤씨 &nbsp;|&nbsp; 산업통상자원부 / 한국산업기술기획평가원(KIAT)</div>
+
+    <div class="foot">
+      <div class="foot-name">윤회㈜ CARE ID</div>
+      <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
+    </div>
   </div>
+</div>
 
-  <div id="view-form" class="hidden">
-
-  <div class="acct-bar">
-    <span class="badge">로그인</span>
-    <span class="who"><b id="acctName">기업</b> 님으로 작성 중</span>
-    <span class="sp"></span>
-    <button type="button" class="lo" onclick="doLogout()">로그아웃</button>
-  </div>
-
-  <header class="masthead">
-    <p class="eyebrow">산업통상부 R&amp;D · 섬유 PCF·LCA 데이터 통합 수집 설문</p>
-    <h1>섬유 PCF · LCA<br>데이터 통합 수집 설문</h1>
-    <p class="hsub">「탄소제로기술개발(R&amp;D) — 섬유제품 PCF 30% 이상 저감 및 K-DPP 최적화 모델 개발」</p>
-    <p class="lede">하나의 양식으로 두 가지를 함께 받습니다. <b>LCA 인벤토리</b>(공정별 투입물·에너지·산출물 실측치)와 <b>PCF 저감 인프라</b>(연간 에너지·용수 총괄, 공정별 측정계 설치 현황)입니다. <span class="hl">아는 만큼만, 가진 데이터부터</span> 채워 주시면 됩니다. 행은 필요한 만큼 추가·삭제할 수 있고, 작성 중 내용은 <span class="hl">‘임시저장’ 후 다음 로그인 때 이어서</span> 작성할 수 있습니다.</p>
-    <p class="applicant">수집기관 <b>윤회(주) · CARE ID</b> &nbsp;|&nbsp; 과제번호 <b>RS-2026-25540842</b> &nbsp;|&nbsp; 데이터 기준연도 <b>2025</b></p>
+<!-- APP -->
+<div id="app" class="hidden">
+  <header id="topbar">
+    <div class="topbar-in">
+      <div class="tb-mark">C</div>
+      <div>
+        <div class="tb-t">공정별 수집 가능 데이터 점검</div>
+        <div class="tb-s" id="topSub">탄소제로 R&D 데이터 점검</div>
+      </div>
+    </div>
   </header>
 
-  <div class="glance">
-    <div class="gfield"><div class="k">과제 / PROJECT</div><div class="v"><b>섬유 PCF 30%↓ &amp; K-DPP 최적화</b> · 산업통상부 R&amp;D</div></div>
-    <div class="gfield"><div class="k">수집 범위 / SCOPE</div><div class="v"><b>LCA 인벤토리 + PCF 측정 인프라</b> 통합</div></div>
-    <div class="gfield"><div class="k">기준연도 / YEAR</div><div class="v"><b>2025년</b> 1개 연도 기준</div></div>
-    <div class="gfield"><div class="k">작성 단위 / UNIT</div><div class="v">대표 제품·공장 <b>1건 기준</b></div></div>
-    <div class="gfield"><div class="k">진행 / FLOW</div><div class="v">작성 → <b>임시저장</b> → <b>제출하기</b></div></div>
-    <div class="gfield" style="border-right:none"><div class="k">문의 / CONTACT</div><div class="v"><b>rnd@careid.center</b> · 010-3484-7601</div></div>
-  </div>
-
-  <div class="howto">
-    <span class="ht">작성 안내</span>
-    <span class="hi"><span class="hk">＋ 항목 추가</span> 행을 필요한 만큼 늘립니다</span>
-    <span class="hi"><span class="hk">이미지</span> 각 공정 단계마다 설비 사진을 첨부할 수 있습니다</span>
-    <span class="hi"><span class="hk">임시저장</span> 작성 중 내용을 저장하고 다음에 이어서 작성</span>
-    <span class="hi"><b>모르는 칸은 비워 두셔도</b> 됩니다</span>
-  </div>
-
   <main>
+    <div class="wrap">
 
-<section id="s1" data-section>
-    <div class="shead"><span class="snum">01</span><h2>작성자 · 기업 정보</h2><span class="sub-en">WRITER &amp; COMPANY</span></div>
-    <p class="sdesc">이 데이터를 작성하는 분과, 추후 확인이 필요할 때 연락드릴 실무 담당자 정보입니다.</p>
-    <p class="src-note">※ 작성된 내용은 과제 수행 목적 외 외부로 유출되지 않습니다.</p>
+      <!-- STEP 1 -->
+      <section id="step-intro">
+        <div class="hero">
+          <span class="hero-badge">1차년도 사전 조사</span>
+          <h1>공정별 수집 가능<br>데이터 점검</h1>
+          <p>각 공정에서 유럽 규제(ESPR, DPP) 대응에 필요한 데이터를, 지금 어느 수준까지 모으고 줄 수 있는지 확인하는 조사입니다. 계측기가 없는 현재 상태를 기준으로 작성하시면 됩니다.</p>
+        </div>
 
-    <div class="subhead">기업 · 기준 정보</div>
-    <div class="grid3">
-      <div class="ig"><label class="lab">기업명 <span class="req">*</span></label><input type="text" data-f="company" placeholder="예) ㈜휴비스"></div>
-      <div class="ig"><label class="lab">작성일자</label><input type="date" data-f="write_date"></div>
-      <div class="ig"><label class="lab">데이터 기준연도 <span class="help" tabindex="0">?<span class="tip">투입·산출·에너지 수치를 어느 해 기준으로 적는지입니다. 기본은 2025년 1개 연도입니다.</span></span></label><input type="text" data-f="data_year" value="2025" placeholder="예) 2025"></div>
+        <!-- 사업 안내 -->
+        <div class="info-card">
+          <div class="info-sec">
+            <h4><span class="dot"></span>이 조사는 무엇인가요?</h4>
+            <p>EU는 2027년부터 섬유·의류 제품에 대해 <b>디지털 제품 여권(DPP)</b>과 제품 탄소발자국(PCF) 정보를 단계적으로 요구할 예정입니다. EU에 제품을 수출하려면 제품이 어떤 공정을 거쳤고 탄소를 얼마나 배출했는지 데이터로 보여줄 수 있어야 합니다. 본 사업은 우리 섬유제품의 탄소발자국을 <b>30% 이상</b> 줄이고, EU 규제에 대응하는 <b>K-DPP 모델</b>을 만드는 국가 연구개발 과제입니다.</p>
+          </div>
+          <div class="info-sec">
+            <h4><span class="dot"></span>왜 데이터가 필요한가요?</h4>
+            <p>제품 한 점의 탄소발자국을 계산하려면 원사·원단·염색·봉제 등 각 공정에서 에너지(전력·스팀)와 자원(원료·용수)을 얼마나 쓰는지 알아야 합니다. 이번 조사는 그 데이터가 지금 <b>어디까지 준비되어 있는지</b>를 먼저 확인하는 단계입니다.</p>
+          </div>
+          <div class="info-sec">
+            <h4><span class="dot"></span>어떻게 참여하나요?</h4>
+            <p>소속 기관을 선택하시면 해당하는 공정 항목만 자동으로 표시됩니다. <b>계측기가 아직 없어도 괜찮습니다.</b> 고지서·작업일지·엑셀 수준의 자료도 충분히 의미가 있고, ‘아직 어렵다(불가)’는 응답도 무엇을 보완해야 할지 파악하는 데 중요한 정보가 됩니다.</p>
+          </div>
+          <div class="info-safe">수집된 정보는 본 R&D 과제의 탄소발자국(PCF) 산정과 K-DPP 모델 개발 목적으로만 사용되며, 작성 내용은 외부로 유출되지 않습니다.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">작성자 · 담당자 정보 <span class="src-tag src-both in-title">공통</span></div>
+          <div class="card-sub">두 기관(KOTITI · 수출협회)이 공통으로 요청하는 항목입니다. 소속 기관을 선택하시면 해당 공정 문항이 표시됩니다.</div>
+                    <div class="field">
+            <label>소속 기관</label>
+            <div id="orgDisplay" style="padding:13px 0;font-size:16px;font-weight:600;color:var(--blue)"></div>
+          </div>
+          <div class="field" style="margin-top:16px"><label>담당자 성명</label><input id="name" type="text" placeholder="예) 홍길동"></div>
+          <div class="field"><label>부서 <span class="opt">(선택)</span></label><input id="dept" type="text" placeholder="예) 생산기술팀"></div>
+          <div class="field"><label>직위 <span class="opt">(선택)</span></label><input id="position" type="text" placeholder="예) 팀장"></div>
+          <div class="field"><label>연락처</label><input id="phone" type="tel" placeholder="예) 010-1234-5678"></div>
+          <div class="field"><label>이메일</label><input id="email" type="email" placeholder="예) name@company.com"></div>
+          <div class="intro-msg" id="introMsg">필수 항목을 모두 입력해 주세요.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goQuestions()">데이터 점검 시작하기</button>
+        </div>
+
+        <div class="foot">
+          <div class="foot-name">윤회㈜ CARE ID</div>
+          <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
+        </div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section id="step-questions" class="hidden">
+        <div class="card" id="orgHeaderCard"></div>
+
+        <div class="card legend">
+          <div class="legend-title">응답 방법</div>
+          <div class="legend-row">각 항목에서 <b>지금 수집 가능한 수준</b>을 골라 주세요. 항목 옆 <b>물음표(?)</b>에 마우스를 올리면 쉬운 설명이 나옵니다.</div>
+          <div class="legend-scale">
+            <span><b>시스템 보유</b> ERP/MES에 있음</span>
+            <span><b>문서/수기</b> 일지/고지서/엑셀</span>
+            <span><b>일부만</b> 일부 또는 추정치</span>
+            <span><b>불가</b> 아직 없음</span>
+            <span><b>해당 없음</b> 우리 공정과 무관</span>
+          </div>
+          <div class="legend-row" style="margin-top:10px">에너지 항목(전력, 스팀, 용수)은 계측기가 없으므로
+            <b>설비별 / 공정 구역별 / 시설 전체(고지서) / 불가</b> 중에서 골라 주세요.
+            <b>‘불가’가 많아도 괜찮습니다. 무엇이 부족한지 파악하는 것이 목적입니다.</b></div>
+
+          <div class="legend-src">
+            <div class="legend-title">데이터 요청 기관 표시</div>
+            <div class="src-row">
+              <span class="src-tag src-kotiti">KOTITI</span>
+              <span class="legend-row">KOTITI 시험연구원이 요청하는 LCI 항목</span>
+            </div>
+            <div class="src-row">
+              <span class="src-tag src-export">수출협회</span>
+              <span class="legend-row">(사)한국섬유수출입협회가 요청하는 PCF 현황표 항목</span>
+            </div>
+            <div class="src-row">
+              <span class="src-tag src-both">공통</span>
+              <span class="legend-row">두 기관이 모두 요청하는 항목 — 한 번만 작성하시면 양쪽에 사용됩니다</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="pcf-body"></div>
+
+        <div id="track-body"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goIntro()">이전으로</button>
+          <button class="btn btn-primary" onclick="submitSurvey()">응답 제출</button>
+        </div>
+
+        <div class="foot">
+          <div class="foot-name">윤회㈜ CARE ID</div>
+          <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section id="step-done" class="hidden">
+        <div class="card done-card">
+          <div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <h2>응답이 정리되었습니다</h2>
+          <p><b id="doneOrg"></b> 님의 응답이 준비되었습니다.<br>아래 버튼으로 응답 내용을 내려받아 담당자에게 전달해 주세요.</p>
+          <div class="btn-row" style="margin-bottom:0">
+            <button class="btn btn-ghost" onclick="goHome()">처음으로</button>
+            <button class="btn btn-primary" onclick="downloadTxt()">응답 내용 내려받기 (.txt)</button>
+          </div>
+        </div>
+        <div class="foot">
+          <div class="foot-name">윤회㈜ CARE ID</div>
+          <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
+        </div>
+      </section>
+
     </div>
-
-    <div class="subhead">작성자 (이 양식을 작성하는 분)</div>
-    <div class="grid4">
-      <div class="ig"><label class="lab">소속</label><input type="text" data-f="w_org" placeholder="예) 생산기술팀"></div>
-      <div class="ig"><label class="lab">성명 <span class="req">*</span></label><input type="text" data-f="w_name" placeholder="예) 홍길동"></div>
-      <div class="ig"><label class="lab">부서 <span class="opt">선택</span></label><input type="text" data-f="w_dept" placeholder="예) 환경안전"></div>
-      <div class="ig"><label class="lab">직위 <span class="opt">선택</span></label><input type="text" data-f="w_title" placeholder="예) 책임"></div>
-      <div class="ig"><label class="lab">전화 <span class="opt">선택</span></label><input type="tel" data-f="w_tel" placeholder="예) 063-000-0000"></div>
-      <div class="ig"><label class="lab">휴대폰 <span class="req">*</span></label><input type="tel" data-f="w_mobile" placeholder="예) 010-1234-5678"></div>
-      <div class="ig"><label class="lab">팩스 <span class="opt">선택</span></label><input type="tel" data-f="w_fax" placeholder="예) 063-000-0001"></div>
-      <div class="ig"><label class="lab">이메일 <span class="req">*</span></label><input type="email" data-f="w_email" placeholder="예) name@company.com"></div>
-    </div>
-
-    <div class="subhead">실무 담당자 (데이터 확인 연락처 · 작성자와 같으면 비워 두기)</div>
-    <div class="grid3">
-      <div class="ig"><label class="lab">소속</label><input type="text" data-f="m_org" placeholder="예) 품질관리팀"></div>
-      <div class="ig"><label class="lab">성명</label><input type="text" data-f="m_name" placeholder="예) 김담당"></div>
-      <div class="ig"><label class="lab">전화</label><input type="tel" data-f="m_phone" placeholder="예) 063-000-0000"></div>
-      <div class="ig"><label class="lab">휴대폰</label><input type="tel" data-f="m_mobile" placeholder="예) 010-0000-0000"></div>
-      <div class="ig span2"><label class="lab">이메일</label><input type="email" data-f="m_email" placeholder="예) name@company.com"></div>
-    </div>
-  </section>
-
-<section id="s2" data-section>
-    <div class="shead"><span class="snum">02</span><h2>PCF 저감 제품 개요</h2><span class="sub-en">PRODUCT</span></div>
-    <p class="sdesc">탄소발자국(PCF)을 줄이려는 대상 제품 하나에 대해 작성합니다. 제품이 여러 개면 양식을 따로 작성해 주세요.</p>
-
-    <div class="subhead">해당 공정 구분 (복수 선택 가능)</div>
-    <div class="chips" data-f="proc_type">
-      <span class="chip" data-v="원사·실">원사·실</span>
-      <span class="chip" data-v="사가공">사가공</span>
-      <span class="chip" data-v="제·편직">제·편직</span>
-      <span class="chip" data-v="염색가공">염색가공</span>
-      <span class="chip" data-v="봉제">봉제</span>
-    </div>
-
-    <div class="subhead">제품 정보</div>
-    <div class="grid2">
-      <div class="ig"><label class="lab">제품명 (스펙) <span class="req">*</span> <span class="help" tabindex="0">?<span class="tip">제품 이름과 규격을 함께 적어 주세요. 예) PET 장섬유 (DTY 75D, S/S 잠재권축사)</span></span></label><input type="text" data-f="prod_name" placeholder="예) PET 장섬유 (DTY 75D, S/S 잠재권축사)"></div>
-      <div class="ig"><label class="lab">모델명 <span class="opt">선택</span></label><input type="text" data-f="prod_model" placeholder="예) HV-DTY-75"></div>
-    </div>
-  </section>
-
-<section id="s3" data-section>
-    <div class="shead"><span class="snum">03</span><h2>PCF 저감 계획</h2><span class="sub-en">REDUCTION PLAN</span></div>
-    <p class="sdesc">이 제품의 탄소를 어떤 방법으로 줄이는지(또는 줄일 계획인지) 적어 주세요.</p>
-
-    <div class="subhead">저감 방법 (복수 선택 가능)</div>
-    <div class="chips" data-f="cut_type">
-      <span class="chip" data-v="리싸이클 사용">리싸이클 사용</span>
-      <span class="chip" data-v="공정 대체·생략">공정 대체·생략</span>
-      <span class="chip" data-v="공정 효율 개선">공정 효율 개선</span>
-      <span class="chip" data-v="저온·저욕비 염색">저온·저욕비 염색</span>
-      <span class="chip" data-v="천연물질 사용">천연물질 사용</span>
-      <span class="chip" data-v="기타 자원 절감">기타 자원 절감</span>
-    </div>
-
-    <div class="subhead">상세 내용</div>
-    <div class="ig">
-      <label class="lab">저감 방법 설명 <span class="help" tabindex="0">?<span class="tip">어떤 공정에서 무엇을 바꿔 탄소를 줄이는지 한 줄씩 적어 주세요. 예) 용융 방사기 효율 개선으로 에너지 절감.</span></span></label>
-      <textarea class="ta-grow" data-f="cut_detail" placeholder="예) 용융 방사기 효율 개선을 통한 에너지 절감&#10;예) 재생 PET 칩 30% 적용으로 원료 탄소 저감&#10;(한 줄에 하나씩 · 칸이 모자라면 아래 버튼이나 모서리로 높이를 조절하세요)"></textarea>
-      <div class="ta-tools">
-        <button type="button" class="ta-btn" onclick="taResize(this,80)">＋ 높이 늘리기</button>
-        <button type="button" class="ta-btn" onclick="taResize(this,-80)">－ 줄이기</button>
-        <span class="resize-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l6-6M10 14l-6 6"/></svg>버튼으로 조절하거나, 입력창 <b>오른쪽 아래 모서리</b>를 끌어도 됩니다</span>
-      </div>
-    </div>
-  </section>
-
-<section id="s4" data-section>
-    <div class="shead"><span class="snum">04</span><h2>제조 공정 개요 · 흐름</h2><span class="sub-en">PROCESS FLOW</span></div>
-    <p class="sdesc">제품이 만들어지는 공정을 순서대로 적어 주세요. LCA·PCF 계산의 기준이 되는 가장 중요한 정보입니다.</p>
-
-    <div class="subhead">공장 · 대표 공정</div>
-    <div class="grid2">
-      <div class="ig"><label class="lab">대표 공정명 <span class="req">*</span></label><input type="text" data-f="proc_main" placeholder="예) 용융방사 공정"></div>
-      <div class="ig"><label class="lab">소재지 (공장 주소) <span class="req">*</span></label><input type="text" data-f="proc_addr" placeholder="예) 전북 전주시 덕진구 ○○○"></div>
-    </div>
-
-    <div class="subhead">공정 단계 (순서대로) <span class="help" tabindex="0" style="margin-left:2px">?<span class="tip">중합 → 칩건조 → 용융방사 → 냉각·급유 → 연신 → 권취 처럼, 거치는 공정을 순서대로 한 단계씩 추가해 주세요.</span></span></div>
-    <p class="sdesc" style="margin-top:0">각 공정 단계마다 설비 사진이나 도식을 첨부할 수 있습니다. 공정을 추가한 뒤, 각 칸의 ‘이 공정 이미지 첨부’ 버튼을 누르거나 이미지를 끌어다 놓으세요.</p>
-    <div class="rows" id="rows-step" data-g="step"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('step')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 단계 추가</button>
-    </div>
-  </section>
-
-<section id="s5" data-section>
-    <div class="shead"><span class="snum">05</span><h2>투입물 (Input)</h2><span class="sub-en">INPUT</span></div>
-    <p class="sdesc">공정에 들어가는 원료·부원료·첨가제 등을 적습니다. 양은 기준연도 1년치(연간) 기준으로 적어 주세요.</p>
-    <div class="note-blue"><b>원료물질</b>(직접 원료)은 어디서 어떻게 들어오는지(원산지·수송)까지 함께 적어 주시면 운송 단계 탄소까지 계산할 수 있습니다. <b>보조물질</b>은 수송 칸을 비워 두셔도 됩니다.</div>
-    <div class="rows" id="rows-input" data-g="input"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('input')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>투입물 추가</button>
-    </div>
-  </section>
-
-<section id="s6" data-section>
-    <div class="shead"><span class="snum">06</span><h2>에너지 · 용수</h2><span class="sub-en">ENERGY &amp; WATER</span></div>
-    <p class="sdesc">공정에 쓰는 전기·스팀·연료·물의 연간 사용량입니다. 탄소 배출량 계산의 핵심 값입니다.</p>
-
-    <div class="subhead">연간 총괄 (기준연도 1년 합계) <span class="help" tabindex="0" style="margin-left:2px">?<span class="tip">해당 제품 공정에 들어간 1년치 사용량을 항목별로 적어 주세요. 모르는 항목은 비워 두셔도 됩니다.</span></span></div>
-    <div class="grid4">
-      <div class="ig"><label class="lab">용수 (만 톤)</label><input type="number" step="any" data-f="en_water" placeholder="예) 30.2"></div>
-      <div class="ig"><label class="lab">외부 스팀 (만 톤)</label><input type="number" step="any" data-f="en_steam" placeholder="예) 8.1"></div>
-      <div class="ig"><label class="lab">전력 (kWh)</label><input type="number" step="any" data-f="en_elec" placeholder="예) 3,659,779"></div>
-      <div class="ig"><label class="lab">등유 (L)</label><input type="number" step="any" data-f="en_kerosene" placeholder="예) 0"></div>
-      <div class="ig"><label class="lab">경유 (L)</label><input type="number" step="any" data-f="en_diesel" placeholder="예) 577"></div>
-      <div class="ig"><label class="lab">기타 석유류 (L)</label><input type="number" step="any" data-f="en_petro" placeholder="예) 0"></div>
-      <div class="ig"><label class="lab">LNG (Nm³) <span class="help" tabindex="0">?<span class="tip">도시가스(천연가스) 사용량입니다. 단위는 표준 상태 부피 Nm³입니다.</span></span></label><input type="number" step="any" data-f="en_lng" placeholder="예) 1,745,339"></div>
-      <div class="ig"><label class="lab">LPG (Nm³)</label><input type="number" step="any" data-f="en_lpg" placeholder="예) 0"></div>
-    </div>
-
-    <div class="subhead">에너지 상세 (위 항목 외 추가로 적을 것이 있으면)</div>
-    <p class="sdesc" style="margin-top:0">예) 공정별 스팀 분리, 자가발전 연료, 재생에너지 등. 없으면 비워 두셔도 됩니다.</p>
-    <div class="rows" id="rows-energy" data-g="energy"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('energy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>에너지 항목 추가</button>
-    </div>
-  </section>
-
-<section id="s7" data-section>
-    <div class="shead"><span class="snum">07</span><h2>유지 및 보수 (Maintenance)</h2><span class="sub-en">MAINTENANCE</span></div>
-    <p class="sdesc">설비 운전에 정기적으로 들어가는 소모성 재료입니다. 예) 윤활유, 컨베이어 벨트 등. 파악되는 범위만 적어 주세요.</p>
-    <div class="rows" id="rows-maint" data-g="maint"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('maint')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>유지·보수 항목 추가</button>
-    </div>
-  </section>
-
-<section id="s8" data-section>
-    <div class="shead"><span class="snum">08</span><h2>산출물 (Output)</h2><span class="sub-en">OUTPUT</span></div>
-    <p class="sdesc">공정에서 나오는 제품·부산물과, 대기·수계·고형 배출물입니다. 폐기물은 어떻게 처리하는지도 함께 적어 주세요.</p>
-    <div class="rows" id="rows-output" data-g="output"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('output')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>산출물 추가</button>
-    </div>
-  </section>
-
-<section id="s9" data-section>
-    <div class="shead"><span class="snum">09</span><h2>측정계 설치 현황 (PCF 인프라)</h2><span class="sub-en">METERING</span></div>
-    <p class="sdesc">공정별로 어떤 계측기(전력계·스팀유량계·수류량계 등)가 설치되어 있고, 추가로 설치할 계획인지 적습니다.</p>
-    <div class="note-blue">이 표는 어떤 데이터가 <b>자동 계측(실측)</b>되고 어떤 데이터는 <b>추정·배분</b>으로 채워야 하는지를 가르는 기준이 됩니다. 측정계가 있으면 그 공정의 탄소값을 더 정확하게 산정할 수 있어, 1차 데이터 확보 계획을 세우는 데 쓰입니다.</div>
-    <div class="rows" id="rows-meter" data-g="meter"></div>
-    <div class="rowbtns">
-      <button type="button" class="addbtn" onclick="addRow('meter')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정·설비 추가</button>
-    </div>
-  </section>
-
-<section id="s10" data-section>
-    <div class="shead"><span class="snum">10</span><h2>PCF 산정 세부 계획</h2><span class="sub-en">DATA PLAN</span></div>
-    <p class="sdesc">생산 데이터를 어떤 시스템으로 모으고 관리하는지, 앞으로의 계획은 어떤지 적어 주세요. 아는 만큼만 적으셔도 됩니다.</p>
-
-    <div class="ig" style="margin-top:14px">
-      <label class="lab">PLC / MES 등 시스템 연계 현황·계획 <span class="help" tabindex="0">?<span class="tip">설비 제어장치(PLC)나 생산관리시스템(MES)에서 사용량·생산량 데이터를 자동으로 뽑을 수 있는지, 계획이 있는지 적어 주세요.</span></span></label>
-      <textarea data-f="plan_mes" placeholder="예) 용융방사 라인은 MES에서 시간별 전력·생산량 추출 가능. 염색 공정은 2026년 상반기 계측기 연동 예정."></textarea>
-    </div>
-    <div class="ig" style="margin-top:14px">
-      <label class="lab">데이터 수집·관리 방식</label>
-      <textarea data-f="plan_manage" placeholder="예) 일별 수기 기록 후 월 단위 엑셀 취합 / ERP 연동 / 협의 필요 등"></textarea>
-    </div>
-    <div class="ig" style="margin-top:14px">
-      <label class="lab">기타 계획·참고 사항 <span class="opt">선택</span></label>
-      <textarea data-f="plan_etc" placeholder="추가로 전달할 내용이 있으면 적어 주세요."></textarea>
-    </div>
-  </section>
-
   </main>
-
-  <footer>
-    <div class="frow">
-      <div>
-        <div class="org">윤회㈜ · CARE ID</div>
-        <div>섬유 PCF·LCA 데이터 통합 수집 설문 · 과제 RS-2026-25540842</div>
-        <div>문의 010-3484-7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
-      </div>
-      <div class="ft-r">CARE ID DATA INTAKE<br>v3.0 · 2026</div>
-    </div>
-  </footer>
-  </div><!-- /#view-form -->
-
-  <div id="view-done" class="hidden">
-    <div class="done-banner">
-      <div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-      <h2>제출이 완료되었습니다</h2>
-      <p>작성해 주셔서 감사합니다. 제출 내용은 아래에서 확인하고 내려받을 수 있습니다. 수정이 필요하면 ‘수정하기’를 눌러 내용을 고친 뒤 다시 제출해 주세요.</p>
-      <div class="stamp" id="doneStamp"></div>
-      <div class="done-actions">
-        <button type="button" class="btn primary" onclick="downloadSubmission()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>제출 내용 내려받기 (JSON)</button>
-        <button type="button" class="btn" onclick="printSubmission()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>인쇄 / PDF로 저장</button>
-        <button type="button" class="btn" onclick="editAgain()">수정하기</button>
-      </div>
-    </div>
-    <div class="done-doc"><div class="pv-doc" id="subDoc"></div></div>
-  </div>
 </div>
-
-<datalist id="dl-unit"><option value="kg/yr"><option value="ton/yr"><option value="L/yr"><option value="m³/yr"><option value="Nm³/yr"><option value="kWh/yr"><option value="MWh/yr"><option value="GJ/yr"><option value="ea/yr"><option value="%"></datalist>
-<datalist id="dl-inkind"><option value="원료물질"><option value="보조물질"><option value="첨가제"><option value="기타"></datalist>
-<datalist id="dl-encarrier"><option value="전력"><option value="외부 스팀"><option value="도시가스(LNG)"><option value="LPG"><option value="경유"><option value="등유"><option value="중유"><option value="자가발전"><option value="재생에너지"></datalist>
-<datalist id="dl-meter"><option value="전력계"><option value="스팀유량계"><option value="수류량계"><option value="가스미터"><option value="온도계"><option value="압력계"></datalist>
-<datalist id="dl-outkind"><option value="제품"><option value="부산물"><option value="대기배출물"><option value="수계배출물(폐수)"><option value="고형폐기물"><option value="기타"></datalist>
-
-<div class="actions hidden" id="actionbar">
-  <div class="prog"><span id="progTxt">0 / 10 섹션</span><span class="bar"><span id="progBar"></span></span></div>
-  <button type="button" class="btn" onclick="saveDraft()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>임시저장</button>
-  <button type="button" class="btn primary" onclick="doSubmit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>제출하기</button>
-</div>
-
-<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="toastMsg"></span></div>
 
 <script>
-/* ============================================================
-   CARE ID · PCF/LCA 통합 수집 설문 — application script (v3)
-   회원가입/로그인 → 작성 → 제출 → 제출본 내려받기
-   ============================================================ */
+const $=id=>document.getElementById(id);
+const val=id=>$(id).value.trim();
 
-/* ---------- small helpers ---------- */
-function ig(lab, inner){ return '<div class="ig"><label class="lab">'+lab+'</label>'+inner+'</div>'; }
-function tin(c,ph,extra){ return '<input type="text" data-c="'+c+'" placeholder="'+(ph||'')+'"'+(extra||'')+'>'; }
-function nin(c,ph){ return '<input type="number" step="any" data-c="'+c+'" placeholder="'+(ph||'')+'">'; }
-function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── 시트 연동 설정 ────────────────────────────────────────────────────────
+const SHEET_ENDPOINT = "";  // GAS 배포 후 /exec URL을 여기에 입력
+let SESSION = null;  // {org, tracks, hyeonhwang} — 비번 인증 후 채워짐
 
-/* ---------- row templates ---------- */
-const TPL = {
-  step: () =>
-    '<div class="grid3">'
-    + ig('공정명', tin('name','예) 용융방사'))
-    + ig('설명 <span class="opt">선택</span>', tin('desc','예) 칩을 녹여 실을 뽑는 공정'))
-    + ig('비고 <span class="opt">선택</span>', tin('note','예) POY'))
-    + '</div>'
-    + '<div class="step-img">'
-    +   '<div class="step-img-top">'
-    +     '<button type="button" class="img-add-btn" onclick="stepImgClick(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>이 공정 이미지 첨부</button>'
-    +     '<input type="file" accept="image/*" multiple hidden onchange="stepImgPick(this)">'
-    +     '<span class="step-img-hint">이 공정의 설비 사진·도식 (여러 장 가능 · 이 칸으로 끌어다 놓아도 됩니다)</span>'
-    +   '</div>'
-    +   '<div class="step-thumbs"></div>'
-    + '</div>',
+async function postJSON(payload) {
+  if (!SHEET_ENDPOINT) throw new Error("SHEET_ENDPOINT not configured");
+  const res = await fetch(SHEET_ENDPOINT, { method: "POST", body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
 
-  input: () =>
-    '<div class="grid4">'
-    + ig('구분', tin('kind','원료물질 / 보조물질',' list="dl-inkind"'))
-    + ig('물질명', tin('material','예) PTA, 재생 PET 칩'))
-    + ig('양', nin('qty','예) 80000'))
-    + ig('단위(연간)', tin('unit','예) ton/yr',' list="dl-unit"'))
-    + ig('용도 <span class="opt">선택</span>', tin('use','예) 중합 원료'))
-    + ig('원산지 (국가/업체) <span class="help" tabindex="0">?<span class="tip">원료물질만 적어 주세요. 어느 나라·업체에서 들어오는지입니다.</span></span>', tin('origin','예) 국내/울산 · 원료물질만'))
-    + ig('수송방법 <span class="opt">원료물질만</span>', tin('transport','예) 육로(탱크로리), 해양(컨테이너선)'))
-    + ig('운송경로 <span class="opt">원료물질만</span>', tin('route','예) 울산항-인천항-사업장'))
-    + '</div>'
-    + '<div class="grid2" style="margin-top:14px">' + ig('비고 <span class="opt">선택</span>', tin('note','')) + '<div></div></div>',
-
-  energy: () =>
-    '<div class="grid4">'
-    + ig('구분', tin('kind','예) 에너지',' list="dl-encarrier"'))
-    + ig('물질명', tin('material','예) 외부 스팀'))
-    + ig('양', nin('qty','예) 81000'))
-    + ig('단위(연간)', tin('unit','예) ton/yr',' list="dl-unit"'))
-    + ig('용도 <span class="opt">선택</span>', tin('use','예) 염색 가열'))
-    + ig('비고 <span class="opt">선택</span>', tin('note',''))
-    + '</div>',
-
-  maint: () =>
-    '<div class="grid4">'
-    + ig('구분', tin('kind','예) 유지·보수'))
-    + ig('물질명', tin('material','예) 윤활유'))
-    + ig('양', nin('qty','예) 120'))
-    + ig('단위(연간)', tin('unit','예) kg/yr',' list="dl-unit"'))
-    + ig('용도 <span class="opt">선택</span>', tin('use','예) 설비 윤활'))
-    + ig('비고 <span class="opt">선택</span>', tin('note','예) 월 10kg 보충'))
-    + '</div>',
-
-  output: () =>
-    '<div class="grid4">'
-    + ig('구분', tin('kind','예) 제품 / 대기배출물',' list="dl-outkind"'))
-    + ig('물질명', tin('material','예) PET 장섬유, CO₂, 폐수'))
-    + ig('양', nin('qty','예) 5000'))
-    + ig('단위(연간)', tin('unit','예) ton/yr',' list="dl-unit"'))
-    + ig('처리방법 <span class="help" tabindex="0">?<span class="tip">폐기물일 때 어떻게 처리하는지입니다. 제품·배출물이면 해당없음으로 두세요.</span></span>',
-        '<select data-c="treat"><option value="">선택</option><option>해당없음</option><option>매립</option><option>소각</option><option>재활용</option><option>위탁처리</option><option>기타</option></select>')
-    + ig('비고 <span class="opt">선택</span>', tin('note','예) 위탁처리(하수종말처리)'))
-    + '</div>',
-
-  meter: () =>
-    '<div class="grid4">'
-    + ig('공정명', tin('proc','예) 용융방사'))
-    + ig('생산설비', tin('equip','예) 방사기'))
-    + ig('대수', nin('count','예) 3'))
-    + ig('필요 측정계', tin('need','예) 전력계',' list="dl-meter"'))
-    + ig('기존 설치 현황 <span class="help" tabindex="0">?<span class="tip">지금 설치되어 있는 계측기 종류와 수량을 적어 주세요.</span></span>', tin('existing','예) 전력계 2, 스팀계 1'))
-    + ig('추가 설치 계획', tin('plan','예) 전력계 1'))
-    + ig('PCF 저감 관련성 <span class="help" tabindex="0">?<span class="tip">이 설비가 탄소 저감과 직접 관련되면 O, 아니면 X를 선택하세요.</span></span>',
-        '<select data-c="rel"><option value="">선택</option><option>O</option><option>X</option><option>미정</option></select>')
-    + '</div>',
+const IC={
+  spool:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 20h12M8 4v16M16 4v16M8 9h8M8 14h8"/></svg>',
+  cone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l5 16H7zM6 21h12"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>',
+  droplet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6M9 8H7a4 4 0 0 0 0 8h2M15 8h2a4 4 0 0 1 0 8h-2"/></svg>',
+  pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V6z"/></svg>',
+  flask:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M7.5 15h9"/></svg>',
+  tube:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v15a2 2 0 0 0 4 0V3M10 13h4"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.1 11l7.8-3.8M8.1 13l7.8 3.8"/></svg>',
+  gauge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14l4-4M21 12a9 9 0 1 0-18 0M7.5 16.5a6 6 0 0 1 9 0"/></svg>',
+  layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>',
+  sync:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 22v-6h6M3 12a9 9 0 0 1 14.5-7.1L21 8M21 12a9 9 0 0 1-14.5 7.1L3 16"/></svg>',
 };
 
-const GROUP_TAG = { step:'단계', input:'투입', energy:'에너지', maint:'유지·보수', output:'산출', meter:'설비' };
-const GROUPS = ['step','input','energy','maint','output','meter'];
+const TRACK={
+  A:{name:"원사(방사)",icon:IC.spool}, B:{name:"원사(방적)",icon:IC.cone},
+  C:{name:"원단(제·편직)",icon:IC.grid}, D:{name:"염색가공",icon:IC.droplet},
+  E1:{name:"봉제",icon:IC.link}, E2:{name:"완제품/브랜드",icon:IC.pkg},
+  F:{name:"추적물질",icon:IC.shield}, G:{name:"시험 검증",icon:IC.flask},
+  I:{name:"공급망 조율(지원)",icon:IC.share}, J:{name:"데이터 연동(실측)",icon:IC.sync},
+  K:{name:"재생원료 연동(제클린)",icon:IC.link}, L:{name:"시제품 국내생산(수요기업)",icon:IC.tube},
+};
+// ORG_TRACKS, ORG_HYEONHWANG → GAS 서버(Code.gs)에만 보관. SESSION 객체로 수신함.
 
-/* ---------- row engine ---------- */
-function rowsEl(g){ return document.querySelector('.rows[data-g="'+g+'"]'); }
-function addRow(g){
-  const host = rowsEl(g);
-  const card = document.createElement('div');
-  card.className = 'rowcard'; card.dataset.row = g;
-  card.innerHTML =
-    '<div class="rc-head"><span class="rc-no"></span><span class="rc-tag">'+GROUP_TAG[g]+'</span><span class="rc-spacer"></span>'
-    + '<button type="button" class="rmbtn" onclick="removeRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>삭제</button></div>'
-    + TPL[g]();
-  host.appendChild(card);
-  if(g==='step'){ card.__imgs=[]; wireStepDrop(card); }
-  renumber(g); syncEmpty(g); updateProgress();
-  return card;
+/* Builders */
+const TAGCLS={"규제":"reg","탄소":"co2","추적":"trace","검증":"verify","연동":"conn"};
+function tagChip(t){ return t?`<span class="q-tag tag-${TAGCLS[t]||'conn'}">${t}</span>`:""; }
+function helpIco(h){ return h?`<span class="help" tabindex="0">?<span class="tip">${h}</span></span>`:""; }
+function srcTag(s){
+  if(!s) return "";
+  const cls={"KOTITI":"src-kotiti","수출협회":"src-export","공통":"src-both"}[s];
+  if(!cls) return "";
+  return `<span class="src-tag ${cls} in-title">${s}</span>`;
 }
-function fillRow(card, data){ if(!data) return; Object.keys(data).forEach(k=>{ if(k==='images') return; const el=card.querySelector('[data-c="'+k+'"]'); if(el) el.value=data[k]; }); }
-function removeRow(btn){ const card=btn.closest('.rowcard'); const g=card.dataset.row; card.remove(); renumber(g); syncEmpty(g); updateProgress(); }
-function renumber(g){ rowsEl(g).querySelectorAll('.rowcard').forEach((c,i)=>{ c.querySelector('.rc-no').textContent=String(i+1).padStart(2,'0'); }); }
-function syncEmpty(g){
-  const host=rowsEl(g); let e=host.querySelector('.empty'); const has=host.querySelector('.rowcard');
-  if(!has && !e){ e=document.createElement('div'); e.className='empty'; e.textContent='아직 추가된 항목이 없습니다. 아래 ‘＋ 추가’ 버튼을 눌러 한 줄씩 채워 주세요.'; host.appendChild(e); }
-  else if(has && e){ e.remove(); }
+function seg(name,label,opts,tag,help){
+  const pills=opts.map(o=>`<label class="seg-opt"><input type="radio" name="${name}" value="${o}"><span>${o}</span></label>`).join("");
+  return `<div class="q"><div class="q-row"><span class="q-label">${label}${helpIco(help)}</span>${tagChip(tag)}</div><div class="seg">${pills}</div></div>`;
 }
-document.addEventListener('input', e=>{ if(e.target.classList) e.target.classList.remove('miss'); updateProgress(); });
-document.querySelectorAll('.chips .chip').forEach(ch=>{ ch.addEventListener('click', ()=>{ ch.classList.toggle('on'); updateProgress(); }); });
+function segEtc(name,label,opts,tag,help){
+  const all=opts.concat(["기타"]);
+  const pills=all.map(o=>`<label class="seg-opt"><input type="radio" name="${name}" value="${o}"><span>${o}</span></label>`).join("");
+  return `<div class="q"><div class="q-row"><span class="q-label">${label}${helpIco(help)}</span>${tagChip(tag)}</div><div class="seg">${pills}</div>`
+    +`<input type="text" class="etc-input" data-for="${name}" placeholder="기타 내용을 입력하여 주십시오"></div>`;
+}
+const CAP=["시스템 보유","문서/수기","일부만","불가","해당 없음"];
+const EN=["설비별","공정 구역별","시설 전체","불가"];
+const MNG=["ERP/MES","엑셀","수기","없음"];
+const FORM=["시스템 추출","엑셀","수기","협의"];
+function cap(name,label,tag,help){ return seg(name,label,CAP,tag||"",help); }
+function energy(name,label,help){ return seg(name,label,EN,"탄소",help); }
+function subhead(t,help,src){ return `<div class="subhead">${t}${srcTag(src)}${helpIco(help)}</div>`; }
+function trackTag(icon,label){ return `<div class="track-tag">${icon}${label}</div>`; }
+function checklist(label,name,items,help){
+  const rows=items.map(it=>`<div class="check-item" data-name="${name}"><span class="ci-box" onclick="tc(this)"></span><span class="ci-label" onclick="tc(this.previousElementSibling)">${it}</span></div>`).join("");
+  const etc=`<div class="check-item" data-name="${name}"><span class="ci-box" onclick="tcEtc(this)"></span><span class="ci-label" onclick="tcEtc(this.previousElementSibling)">기타</span></div>`
+    +`<input type="text" class="etc-input" data-foretc="${name}" placeholder="기타 내용을 입력하여 주십시오">`;
+  return `<div class="q"><span class="q-label" style="display:inline-flex;align-items:center;margin-bottom:10px">${label}${helpIco(help)}</span><div class="opts">${rows}${etc}</div></div>`;
+}
+function pcfText(label,ph,help){
+  return `<div class="q"><span class="q-label pcf-q">${label}${helpIco(help)}</span><input type="text" class="pcf-in" placeholder="${ph||''}"></div>`;
+}
+function pcfArea(label,ph,help){
+  return `<div class="q"><span class="q-label pcf-q">${label}${helpIco(help)}</span><textarea class="pcf-in" rows="3" placeholder="${ph||''}"></textarea></div>`;
+}
 
-/* ---------- per-step images ---------- */
-function imgType(u){ const m=u.substring(5,u.indexOf(';')); if(m==='image/png')return'png'; if(m==='image/gif')return'gif'; if(m==='image/bmp')return'bmp'; return'jpg'; }
-function downscaleImage(file){
-  return new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>{ const img=new Image();
-      img.onload=()=>{ const max=1500; let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height; const r=Math.min(1,max/Math.max(w,h)); w=Math.max(1,Math.round(w*r)); h=Math.max(1,Math.round(h*r));
-        let url; try{ const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h); url=cv.toDataURL('image/jpeg',0.88); }catch(e){ url=fr.result; }
-        res({url,w,h,name:file.name||''}); };
-      img.onerror=()=>rej(new Error('decode')); img.src=fr.result; };
-    fr.onerror=()=>rej(new Error('read')); fr.readAsDataURL(file);
+/* ===== 동적 표(행 추가) 공용 엔진 ===== */
+const DT_DEFS={
+  meter:{ label:"공정", cols:[
+    {k:"process",l:"공정",ph:"공정명 (예: 용융방사)"},
+    {k:"equip",l:"설비",ph:"생산설비 / 대수 (예: 압출기 3대)"},
+    {k:"need",l:"필요측정계",ph:"필요 측정계 (예: 전력계, 스팀유량계)"},
+    {k:"existing",l:"기존설치",ph:"기존 설치 현황 (예: 전력계 3, 스팀계 2)"},
+    {k:"plan",l:"추가계획",ph:"추가 설치 계획 (예: 전력계 1, 스팀계 2)"} ]},
+  proc:{ label:"공정", cols:[
+    {k:"name",l:"공정명",ph:"공정명 (예: 용융방사)"},
+    {k:"desc",l:"설명",ph:"설명"} ]},
+  input:{ label:"투입물", cols:[
+    {k:"gubun",l:"구분",ph:"구분 (예: 기초원료 / 부원료)"},
+    {k:"mat",l:"물질명",ph:"물질명 (예: PTA)"},
+    {k:"amt",l:"양",ph:"양 (예: 8만톤)"},
+    {k:"unit",l:"단위",ph:"단위 / 연간 (예: ton/년)"},
+    {k:"use",l:"용도",ph:"용도"},
+    {k:"origin",l:"원산지",ph:"원산지 국가/업체 (원료물질만)"},
+    {k:"transport",l:"수송방법",ph:"수송방법 (해양 / 육로)"},
+    {k:"route",l:"운송경로",ph:"운송경로 (원료물질만)"},
+    {k:"note",l:"비고",ph:"비고"} ]},
+  energy:{ label:"에너지", cols:[
+    {k:"gubun",l:"구분",ph:"구분 (예: 전력 / 스팀 / 연료)"},
+    {k:"mat",l:"물질명",ph:"물질명 (예: 전력, LNG)"},
+    {k:"amt",l:"양",ph:"양 (예: 3,659,779)"},
+    {k:"unit",l:"단위",ph:"단위 / 연간 (예: kWh/년)"},
+    {k:"use",l:"용도",ph:"용도"},
+    {k:"note",l:"비고",ph:"비고"} ]},
+  maint:{ label:"유지보수", cols:[
+    {k:"gubun",l:"구분",ph:"구분"},
+    {k:"mat",l:"물질명",ph:"물질명 (예: 윤활유)"},
+    {k:"amt",l:"양",ph:"양"},
+    {k:"unit",l:"단위",ph:"단위 / 연간"},
+    {k:"use",l:"용도",ph:"용도"},
+    {k:"note",l:"비고",ph:"비고"} ]},
+  output:{ label:"산출물", cols:[
+    {k:"gubun",l:"구분",ph:"구분 (예: 제품 / 부산물 / 폐기물)"},
+    {k:"mat",l:"물질명",ph:"물질명"},
+    {k:"amt",l:"양",ph:"양"},
+    {k:"unit",l:"단위",ph:"단위 / 연간"},
+    {k:"method",l:"처리방법",ph:"처리방법 (매립 / 소각 / 재활용 / 기타)"},
+    {k:"note",l:"비고",ph:"비고"} ]},
+};
+function dtRowHTML(id,n){
+  const def=DT_DEFS[id];
+  const inputs=def.cols.map(c=>`<input type="text" data-k="${c.k}" placeholder="${c.ph}">`).join("");
+  return `<div class="meter-row"><div class="meter-row-head"><span>${def.label} #${n}</span>`
+    +`<button type="button" class="meter-del" onclick="dtDel(this,'${id}')">삭제</button></div>`
+    +`<div class="meter-grid">${inputs}</div></div>`;
+}
+function dtContainer(id,addLabel){ return `<div id="dt_${id}"></div>`
+  +`<button type="button" class="meter-add" onclick="dtAdd('${id}')">+ ${addLabel||'행 추가'}</button>`; }
+function dtAdd(id){ const c=$("dt_"+id); if(!c)return; const n=c.querySelectorAll(".meter-row").length+1; c.insertAdjacentHTML("beforeend", dtRowHTML(id,n)); }
+function dtDel(btn,id){ btn.closest(".meter-row").remove(); dtRenum(id); }
+function dtRenum(id){ const c=$("dt_"+id); if(!c)return; const lab=DT_DEFS[id].label; c.querySelectorAll(".meter-row .meter-row-head span").forEach((s,i)=>s.textContent=lab+" #"+(i+1)); }
+function dtCollect(id){
+  const c=$("dt_"+id); if(!c) return "   (미입력)";
+  const def=DT_DEFS[id]; const out=[];
+  c.querySelectorAll(".meter-row").forEach(r=>{
+    const vals=def.cols.map(col=>{ const el=r.querySelector('[data-k="'+col.k+'"]'); return el?el.value.trim():""; });
+    if(vals.some(v=>v)){ out.push("   · "+def.cols.map((col,i)=>col.l+":"+(vals[i]||"-")).join(" / ")); }
   });
-}
-function stepImgClick(btn){ const inp=btn.parentNode.querySelector('input[type=file]'); if(inp) inp.click(); }
-function stepImgPick(input){ addStepImages(input.closest('.rowcard'), input.files); input.value=''; }
-async function addStepImages(card, list){
-  if(!card) return;
-  const files=[...list].filter(f=>/^image\//.test(f.type));
-  if(!files.length){ if(list && list.length) toast('이미지 파일만 첨부할 수 있습니다.'); return; }
-  if(!card.__imgs) card.__imgs=[];
-  for(const f of files){ try{ card.__imgs.push(await downscaleImage(f)); }catch(e){} }
-  renderStepThumbs(card); updateProgress(); toast(files.length+'개 이미지를 첨부했습니다.');
-}
-function renderStepThumbs(card){
-  const host=card.querySelector('.step-thumbs'); if(!host) return; const imgs=card.__imgs||[];
-  if(!imgs.length){ host.innerHTML=''; return; }
-  host.innerHTML=imgs.map((im,i)=>'<div class="thumb"><img src="'+im.url+'" alt=""><div class="cap">'+esc(im.name||('이미지 '+(i+1)))+'</div><button type="button" class="del" title="삭제" data-i="'+i+'" onclick="removeStepImg(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>').join('');
-}
-function removeStepImg(btn){ const card=btn.closest('.rowcard'); const i=+btn.dataset.i; if(card && card.__imgs){ card.__imgs.splice(i,1); renderStepThumbs(card); updateProgress(); } }
-function wireStepDrop(card){
-  card.addEventListener('dragover', e=>{ if(e.dataTransfer && [...e.dataTransfer.types].indexOf('Files')>-1){ e.preventDefault(); card.classList.add('drag'); } });
-  card.addEventListener('dragleave', e=>{ if(!card.contains(e.relatedTarget)) card.classList.remove('drag'); });
-  card.addEventListener('drop', e=>{ card.classList.remove('drag'); if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){ e.preventDefault(); addStepImages(card, e.dataTransfer.files); } });
+  return out.length?out.join("\n"):"   (미입력)";
 }
 
-/* ---------- textarea height controls ---------- */
-function taResize(btn, delta){ const box=btn.closest('.ig'); const ta=box && box.querySelector('textarea'); if(!ta) return; const h=(ta.offsetHeight||120)+delta; ta.style.height=Math.max(90,h)+'px'; }
+/* ===== PCF 저감·산정 인프라 현황표 (수출협회) ===== */
+function hyeonhwangItems(){ return ''
+  +`<div class="pcf-note">(사)한국섬유수출입협회가 KIAT 제출용으로 요청하는 <b>PCF 저감계획 및 산정 인프라 현황표</b>입니다. <b>[공통]</b> 표시 항목은 한 번 작성하시면 KOTITI LCI 양식에도 사용됩니다.</div>`
+  +subhead("PCF 저감 제품 개요",null,"수출협회")
+  +seg("pcf_cat","제품 구분",["원사·실","사가공","제·편직","염색가공","봉제"],"","이 제품이 어느 공정 단계의 제품인지 골라주세요.")
+  +pcfText("제품명 (스펙)","예) PET 장섬유 (DTY 75D, S/S 잠재권축사)","대상 제품의 이름과 규격이에요.")
+  +pcfText("모델명","예) RW-2025-01")
+  +subhead("PCF 저감 계획",null,"수출협회")
+  +checklist("저감 방식 (복수 선택)","pcf_method",["리싸이클 사용","공정 대체·생략","공정 효율 개선","저온·저욕비 염색","천연물질 사용","기타 자원 절감"],"어떤 방법으로 탄소를 줄일 계획인지 모두 골라주세요.")
+  +pcfArea("저감 상세 내용","예) 용융 방사기 효율 개선을 통한 에너지 절감 / 저욕비 염색으로 용수·스팀 절감 등")
+  +subhead("제조 공정 개요",null,"수출협회")
+  +pcfText("주요 공정명","예) 용융방사 공정")
+  +pcfText("공정 소재지","예) 전북 전주시 덕진구 OOO")
+  +subhead("공정 흐름도","두 기관(KOTITI · 수출협회) 모두 요청하는 공통 항목이에요. 한 번 제출하시면 양쪽 모두에 사용됩니다.","공통")
+  +`<div class="pcf-sub">※ 공정 흐름도와 설비 사진은 별도 파일(이미지)로 제출해 주세요.</div>`
+  +subhead("원료 투입 현황 (2025년)","제품을 만드는 데 들어간 원료의 종류와 1년간 투입량을 요약해 주세요. 상세 항목은 아래 LCI 양식의 ‘투입물’에서 다시 다룹니다.","수출협회")
+  +pcfArea("원료별 연간 투입량","예) PTA 8만톤 / MEG 3만톤 / 중합 첨가제 ○○ / 방사 부원료 ○○")
+  +subhead("물·에너지 투입 현황 (2025년)","공정 전체에서 1년간 사용한 에너지와 물의 양이에요. 두 기관 공통 항목이며, 사용하지 않는 항목은 비워두세요.","공통")
+  +`<div class="pcf-grid">`
+    +pcfText("용수 (만톤)","예) 30.2")
+    +pcfText("외부 스팀 (만톤)","예) 8.1")
+    +pcfText("전력 (kWh)","예) 3,659,779")
+    +pcfText("등유 (L)","-")
+    +pcfText("경유 (L)","예) 577")
+    +pcfText("기타 연료 (L)","-")
+    +pcfText("LNG (Nm³)","예) 1,745,339")
+    +pcfText("LPG (Nm³)","-")
+  +`</div>`
+  +subhead("측정계 설치 현황","공정별로 전력계·스팀유량계 등 계측기가 지금 얼마나 설치돼 있고, 추가로 설치할 계획이 있는지 적어주세요. 공정이 여러 개면 ‘행 추가’로 늘리면 됩니다.","수출협회")
+  +dtContainer("meter","측정계 행 추가")
+  +subhead("PCF 산정 세부 계획",null,"수출협회")
+  +pcfArea("PLC/MES 연계 및 데이터 관리 방안","예) MES에서 공정별 전력 사용량 자동 수집 / 월별 에너지 사용량 엑셀 관리 / 계측기 추가 설치 후 실측 데이터 연계 예정");
+}
 
-/* ============================================================
-   collect (raw)
-   ============================================================ */
-function collect(){
-  const data = { fields:{}, chips:{}, groups:{} };
-  document.querySelectorAll('input[data-f],textarea[data-f],select[data-f]').forEach(el=>{ data.fields[el.dataset.f] = el.value.trim(); });
-  document.querySelectorAll('.chips[data-f]').forEach(box=>{ data.chips[box.dataset.f] = [...box.querySelectorAll('.chip.on')].map(c=>c.dataset.v); });
-  GROUPS.forEach(g=>{
-    if(g==='step'){
-      data.groups.step = [...rowsEl('step').querySelectorAll('.rowcard')].map(card=>{
-        const o={}; card.querySelectorAll('[data-c]').forEach(el=> o[el.dataset.c]=el.value.trim());
-        const imgs=(card.__imgs||[]).map(im=>({url:im.url,w:im.w,h:im.h,name:im.name})); if(imgs.length) o.images=imgs;
-        return o;
-      }).filter(o=> Object.entries(o).some(([k,v])=> k==='images'? v.length>0 : v!==''));
+/* ===== LCI 투입/산출 데이터 (KOTITI) ===== */
+function lciItems(){ return ''
+  +`<div class="pcf-note">KOTITI 시험연구원이 요청하는 <b>LCI(전과정 인벤토리) 투입/산출 데이터</b> 시트입니다. <b>[공통]</b> 표시 항목은 위쪽 수출협회 현황표와 같이 사용되며, 데이터 기준년도는 <b>2025년</b>입니다. 작성 내용은 외부로 유출되지 않습니다.</div>`
+  +subhead("데이터 기준년도","LCI 작성 기준이 되는 연도예요. 기본 2025년입니다.","KOTITI")
+  +pcfText("데이터 기준년도","예) 2025")
+  +subhead("공정 흐름도","원료부터 제품까지의 공정 순서도예요. 위쪽 현황표에서 작성하신 공정 흐름도와 동일한 파일을 사용하시면 됩니다.","공통")
+  +`<div class="pcf-sub">※ 별도 이미지 파일로 한 번만 제출하시면 두 기관 모두에 사용됩니다.</div>`
+  +subhead("공정 설명","각 공정의 이름과 간단한 설명을 적어주세요.","KOTITI")
+  +dtContainer("proc","공정 추가")
+  +subhead("투입물 (Input)","공정에 들어가는 원료·부원료의 종류와 연간 사용량이에요. ‘구분’ 항목은 두 기관 공통이고, 물질명·양·단위·용도·수송 정보는 KOTITI LCI 전용 상세 항목입니다. 원료물질은 원산지·수송방법·운송경로도 함께 적어주세요.","KOTITI")
+  +dtContainer("input","투입물 추가")
+  +subhead("에너지 (Energy)","공정에 사용하는 전력·스팀·연료 등의 종류와 연간 사용량이에요. 위쪽 현황표의 요약값을 공정별로 세분화해 작성하시면 됩니다.","공통")
+  +dtContainer("energy","에너지 추가")
+  +subhead("유지 및 보수 (Maintenance & Repair)","설비 유지·보수에 들어가는 자재나 약품이 있으면 적어주세요. 없으면 비워두셔도 됩니다.","KOTITI")
+  +dtContainer("maint","유지보수 추가")
+  +subhead("산출물 (Output)","공정에서 나오는 제품·부산물·폐기물과 그 처리방법(매립/소각/재활용/기타)이에요.","KOTITI")
+  +dtContainer("output","산출물 추가");
+}
+
+/* Track contents (원사 방사/방적 공용) */
+function yarnItems(k){ return ''
+  +subhead("원사 형태","장섬유(필라멘트)인지 단섬유(스테이플)인지 골라주세요.")
+  +seg(k+"_fibtype","원사 형태",["장섬유(필라멘트)","단섬유(스테이플)","방적사(스펀)","토우(tow)"],"","실의 형태예요. 길게 이어지면 장섬유, 짧게 잘리면 단섬유, 짧은 섬유를 꼬아 만든 실이면 방적사예요.")
+  +subhead("생산 묶음(Lot) 관리","한 번에 만든 실을 묶어 번호를 매기고, 얼마나 만들었는지 기록하는 부분이에요.")
+  +segEtc(k+"_unit","생산 단위(Lot)는 무엇입니까?",["kg","cone","tow"],"","실을 몇 단위로 묶어서 세는지 알려주세요. 예) 무게(kg), 콘(cone) 개수.")
+  +cap(k+"_lotnum","생산 묶음번호(Lot) 부여","추적","만든 실 묶음마다 고유 번호를 매기고 있는지 묻는 거예요.")
+  +cap(k+"_lotqty","Lot당 평균 생산량","탄소","묶음 하나당 보통 얼마나 만드는지에 대한 거예요.")
+  +cap(k+"_totqty","월 또는 기간별 총 생산량","탄소","한 달 또는 일정 기간 동안 총 얼마나 만드는지예요.")
+  +cap(k+"_runtime","설비별 가동 시간","탄소","기계를 하루(또는 기간) 동안 몇 시간 돌리는지예요.")
+  +subhead("투입 재료","실을 만들 때 넣는 원재료의 종류와 양에 대한 내용이에요.")
+  +cap(k+"_mattype","원료 종류 구분(석유계, 재활용 등)","규제","어떤 원료를 쓰는지(새 석유계인지 재활용인지) 구분하는지 묻는 거예요.")
+  +cap(k+"_matqty","원료별 투입량","탄소","원료를 종류별로 얼마나 넣었는지예요.")
+  +cap(k+"_origin","원료 원산지","규제","원료가 어느 나라(지역)에서 왔는지예요.")
+  +cap(k+"_cert","친환경 인증(GRS, RCS 등) 보유","규제","재활용 등을 인증해 주는 서류(GRS 등)를 가지고 있는지예요.")
+  +subhead("소재 재활용 함량","재활용 소재가 얼마나 들어갔는지에 대한 내용이에요. 유럽 규제에서 꼭 필요해요.")
+  +cap(k+"_recyc","재활용 원료 비율(%)","규제","전체 중 재활용 원료가 몇 퍼센트인지 기록하는지예요.")
+  +cap(k+"_comp","최종 원사 소재 구성비","규제","완성된 실이 어떤 소재로 몇 퍼센트씩 이뤄졌는지예요.")
+  +subhead("부자재 약품","실을 만들 때 쓰는 보조 재료나 약품에 대한 내용이에요.")
+  +cap(k+"_oil","방사유제, 호제 사용량","","실을 뽑을 때 바르는 기름(유제)이나 풀(호제)을 얼마나 쓰는지예요.")
+  +cap(k+"_addt","첨가제(촉매, 안정제 등) 종류","","제조에 넣는 첨가 약품의 종류예요.")
+  +subhead("에너지","전기, 스팀, 물을 얼마나 썼는지에 대한 내용이에요. 탄소 배출량 계산에 쓰여요.")
+  +energy(k+"_elec","전력 사용량","전기를 얼마나 쓰는지예요. 기계별, 구역별, 시설 전체 중 어디까지 알 수 있는지 골라주세요.")
+  +energy(k+"_steam","스팀 또는 열 사용량","공정에 쓰는 스팀(증기)이나 열을 얼마나 쓰는지예요.")
+  +energy(k+"_water","용수 사용량","공정에 쓰는 물을 얼마나 쓰는지예요.")
+  +subhead("폐기물 수율","버려지는 양과 제대로 만들어진 비율에 대한 내용이에요.")
+  +cap(k+"_yield","수율(%) 또는 손실량","탄소","넣은 원료 대비 제대로 만들어진 비율, 또는 버려진 양이에요.")
+  +cap(k+"_defect","불량률","탄소","잘못 만들어진 제품의 비율이에요.")
+  +cap(k+"_waste","폐섬유(웨이스트) 발생량","탄소","공정에서 나오는 못 쓰는 섬유 부산물의 양이에요.")
+  +subhead("추적성","어디서 온 재료가 어디로 갔는지 번호로 이어 추적하는 부분이에요.")
+  +cap(k+"_trace","원료 Lot과 원사 Lot 연결","추적","어떤 원료로 어떤 실을 만들었는지 번호로 연결해 두는지예요.")
+  +cap(k+"_marker","추적물질(분자마커) 투입 가능 단계","추적","진위 확인용 추적물질을 어느 단계에서 넣을 수 있는지예요.")
+  +cap(k+"_mbapply","추적성 M/B(마스터배치) 적용 여부·투입량 기록","추적","추적용 마스터배치를 실에 넣었는지, 얼마나 넣었는지 기록하는지예요.")
+  +subhead("시스템 데이터 제공","정보를 어떤 방식으로 관리하고 우리에게 전달할 수 있는지에 대한 내용이에요.")
+  +seg(k+"_mng","데이터 관리 방식",MNG,"연동","생산 정보를 지금 어떤 방식으로 기록하고 관리하는지예요.")
+  +seg(k+"_form","데이터 제공 형태",FORM,"연동","그 정보를 우리에게 어떤 형태로 줄 수 있는지예요.");
+}
+function fabricItems(k){ return ''
+  +subhead("원단 제조 방식","제직(직물)인지 편직(니트)인지, 두 가지를 함께 하는지 골라주세요.")
+  +seg(k+"_method","제조 방식",["제직(직물)","편직(니트)","제·편직 모두"],"","원단을 어떻게 만드는지예요. 예) 직기로 짜면 제직, 편직기로 뜨면 편직.")
+  +subhead("생산 묶음(Lot) 관리","한 번에 만든 원단을 묶어 번호를 매기고, 얼마나 만들었는지 기록하는 부분이에요.")
+  +segEtc(k+"_unit","원단 생산 단위(Lot)는 무엇입니까?",["roll","yard","meter","kg"],"","원단을 몇 단위로 세는지 알려주세요. 예) 롤(roll), 야드, 미터, 무게(kg).")
+  +cap(k+"_lotnum","원단 Lot 번호 부여","추적","만든 원단 묶음마다 고유 번호를 매기는지예요.")
+  +cap(k+"_lotqty","Lot당 생산량","탄소","원단 묶음 하나당 얼마나 만드는지예요.")
+  +cap(k+"_totqty","기간별 총 생산량","탄소","일정 기간 동안 총 얼마나 만드는지예요.")
+  +cap(k+"_runtime","직기/편직기 가동 시간","탄소","원단 만드는 기계(직기 또는 편직기)를 몇 시간 돌리는지예요.")
+  +subhead("투입 원사","원단을 짤 때 들어간 실의 종류와 양에 대한 내용이에요.")
+  +cap(k+"_yarntype","투입 원사 종류와 번수","규제","어떤 실을(굵기 번수 포함) 쓰는지예요.")
+  +cap(k+"_yarnqty","투입 원사량","탄소","원단을 짜는 데 실이 얼마나 들어갔는지예요.")
+  +cap(k+"_yarnlot","투입 원사 Lot 번호 기록","추적","어떤 실 묶음을 썼는지 번호로 기록해 두는지예요.")
+  +subhead("원단 규격","원단의 폭, 무게, 밀도 같은 기본 사양이에요.")
+  +cap(k+"_spec","폭, 중량(g/㎡), 밀도, 조직","탄소","원단의 폭, 1㎡당 무게, 짜임 밀도와 조직 정보예요.")
+  +subhead("약품","원단 가공에 쓰는 화학약품에 대한 내용이에요.")
+  +cap(k+"_sizing","사이징(호부) 약품 종류와 사용량","규제","실이 끊기지 않게 바르는 풀(사이징) 약품의 종류와 양이에요.")
+  +cap(k+"_pretreat","정련 또는 전처리 약품","규제","원단을 깨끗이 하거나 준비하는 데 쓰는 약품이에요.")
+  +subhead("에너지","전기, 스팀을 얼마나 썼는지에 대한 내용이에요. 탄소 계산에 쓰여요.")
+  +energy(k+"_elec","전력 사용량","전기를 얼마나 쓰는지예요. 알 수 있는 범위를 골라주세요.")
+  +energy(k+"_steam","스팀 또는 열 사용량","공정에 쓰는 스팀이나 열의 사용량이에요.")
+  +subhead("폐기물 수율","버려지는 양과 제대로 만들어진 비율에 대한 내용이에요.")
+  +cap(k+"_yield","수율 또는 손실(loss)","탄소","투입 대비 제대로 짜인 비율, 또는 버려진 양이에요.")
+  +cap(k+"_defect","불량률","탄소","잘못 짜인 원단의 비율이에요.")
+  +cap(k+"_waste","폐원단 발생량","탄소","못 쓰고 버려지는 원단의 양이에요.")
+  +subhead("추적성","어떤 실로 어떤 원단을 짰는지 번호로 잇는 부분이에요.")
+  +cap(k+"_trace","원사 Lot과 원단 Lot 연결","추적","사용한 실 묶음과 짠 원단 묶음을 번호로 연결해 두는지예요.")
+  +subhead("시스템 데이터 제공","정보를 어떻게 관리하고 전달할 수 있는지예요.")
+  +seg(k+"_mng","데이터 관리 방식",MNG,"연동","생산 정보를 지금 어떤 방식으로 관리하는지예요.")
+  +seg(k+"_form","데이터 제공 형태",FORM,"연동","그 정보를 어떤 형태로 줄 수 있는지예요.");
+}
+function dyeItems(k){ return ''
+  +subhead("염색·가공 방식","어떤 방식으로 염색·가공하는지 (여러 개면 모두) 골라주세요.")
+  +checklist("염색·가공 방식 (복수 선택)",k+"_dyetype",["액상 침염","감물 등 천연염색","날염(프린트)","건식 염색(DTP)","코팅·가공"],"주로 쓰는 염색·가공 방식을 모두 골라주세요. 예) 물에 담그면 침염, 감 등 천연재료면 천연염색, 디지털 프린트면 DTP.")
+  +subhead("처리 단위 관리","한 번에 염색하고 가공하는 묶음을 어떻게 세고 번호 매기는지에 대한 내용이에요.")
+  +segEtc(k+"_unit","한 번에 염색하는 처리 단위는?",["Bath","Batch","비수"],"","한 번에 염색하는 묶음을 뭐라고 부르는지 알려주세요. 예) Bath, Batch, 비수.")
+  +cap(k+"_qty","1회 처리량(kg/롤)","탄소","한 번에 염색하는 양(무게나 롤 수)이에요.")
+  +cap(k+"_totqty","기간별 처리량","탄소","일정 기간 동안 총 얼마나 염색하는지예요.")
+  +cap(k+"_lotnum","가공 후 Lot 부여","추적","염색과 가공이 끝난 묶음에 번호를 매기는지예요.")
+  +subhead("투입 원단","염색에 들어온 원단의 종류와 번호에 대한 내용이에요.")
+  +cap(k+"_intype","투입 원단 종류","","어떤 원단을 염색하는지예요.")
+  +cap(k+"_inlot","투입 원단 Lot 또는 입고번호 기록","추적","들어온 원단의 묶음번호(또는 입고번호)를 기록해 두는지예요.")
+  +subhead("염료 약품","사용하는 염료와 화학약품에 대한 내용이에요. 유해물질 관리에 필요해요.")
+  +cap(k+"_dye","염료 종류와 투입량(g/kg)","규제","어떤 염료를 얼마나 쓰는지예요.")
+  +cap(k+"_aux","조제와 보조제 종류와 양","규제","염색을 돕는 보조 약품의 종류와 양이에요.")
+  +cap(k+"_finish","가공제(발수, 항균, 방염 등) 종류","규제","물 안 묻게 하거나 항균 처리하는 등 가공 약품의 종류예요.")
+  +cap(k+"_msds","유해물질 목록(MSDS) 관리","규제","약품의 안전정보 서류(MSDS)와 유해물질 목록을 관리하는지예요.")
+  +subhead("공정 조건","염색할 때의 온도, 시간, 물의 양 같은 작업 조건이에요.")
+  +cap(k+"_temp","온도와 시간 프로파일","탄소","염색할 때 온도를 얼마로, 얼마나 오래 유지하는지예요.")
+  +cap(k+"_ratio","욕비(liquor ratio)","탄소","원단 무게 대비 물의 양 비율이에요. 욕비라고 불러요.")
+  +subhead("에너지","전기, 스팀을 얼마나 썼는지예요. 탄소 계산에 쓰여요.")
+  +energy(k+"_elec","전력 사용량","전기를 얼마나 쓰는지예요. 알 수 있는 범위를 골라주세요.")
+  +energy(k+"_steam","스팀 사용량","염색에 쓰는 스팀(증기)의 양이에요.")
+  +subhead("용수 폐수","사용한 물과 버려지는 폐수에 대한 내용이에요.")
+  +energy(k+"_water","용수 사용량","염색에 쓰는 물의 양이에요. 알 수 있는 범위를 골라주세요.")
+  +cap(k+"_wastewater","폐수 발생량과 처리 방식","규제","버려지는 폐수의 양과 처리 방법이에요.")
+  +subhead("폐기물 수율","다시 작업한 비율과 불량 비율이에요.")
+  +cap(k+"_reproc","재염율(재가공률)","탄소","색이 안 맞아 다시 염색하는 비율이에요.")
+  +cap(k+"_defect","불량률","탄소","잘못된 제품의 비율이에요.")
+  +subhead("시스템 데이터 제공","정보를 어떻게 관리하고 전달할 수 있는지예요.")
+  +seg(k+"_mng","데이터 관리 방식",MNG,"연동","생산 정보를 지금 어떤 방식으로 관리하는지예요.")
+  +seg(k+"_form","데이터 제공 형태",FORM,"연동","그 정보를 어떤 형태로 줄 수 있는지예요.");
+}
+function sewItems(k){ return ''
+  +subhead("생산 관리","얼마나, 어느 라인에서, 얼마의 시간으로 만들었는지에 대한 내용이에요.")
+  +cap(k+"_lot","생산 단위(Lot 또는 작업지시)와 생산량","탄소","작업지시(묶음) 단위로 얼마나 만드는지예요.")
+  +cap(k+"_line","라인별 생산 정보","","어느 봉제 라인에서 얼마나 만드는지예요.")
+  +cap(k+"_sam","작업 공수(SAM)와 작업 시간","탄소","옷 한 벌 만드는 데 드는 표준 시간(작업 공수)이에요.")
+  +subhead("투입 재료","옷을 만들 때 들어간 원단과 부자재에 대한 내용이에요.")
+  +cap(k+"_bom","제품 소재 구성(BOM)","규제","이 옷이 어떤 소재로 이뤄졌는지 정리한 표(BOM)예요.")
+  +cap(k+"_fabric","패턴별 원단 사용량","탄소","옷 한 벌에 원단이 얼마나 들어가는지예요.")
+  +cap(k+"_cutloss","재단 손실(cutting loss)","탄소","원단을 자르고 남아 버려지는 양이에요.")
+  +cap(k+"_trim","부자재(지퍼, 단추, 실, 라벨) 사용량","규제","지퍼, 단추, 실, 라벨 같은 부자재의 사용량이에요.")
+  +subhead("에너지","봉제 라인에서 전기를 얼마나 쓰는지예요. 탄소 계산에 쓰여요.")
+  +energy(k+"_elec","봉제 라인 전력 사용량","봉제 작업에 쓰는 전기의 양이에요. 알 수 있는 범위를 골라주세요.")
+  +subhead("품질 폐기물","불량과 버려지는 자투리에 대한 내용이에요.")
+  +cap(k+"_defect","불량률과 재작업률","탄소","잘못 만들어 다시 작업하거나 버리는 비율이에요.")
+  +cap(k+"_scrap","봉제 부산물(자투리) 발생량","탄소","봉제 후 남는 자투리 원단의 양이에요.")
+  +subhead("시스템 데이터 제공","봉제 정보를 어떤 형태로 줄 수 있는지에 대한 내용이에요.")
+  +seg(k+"_out","시스템 데이터 출력 형식",["API","엑셀/CSV","PDF","협의"],"연동","봉제 시스템에서 데이터를 어떤 형태로 뽑을 수 있는지예요. 예) API, 엑셀.")
+  +seg(k+"_byn","블랙야크 제품 봉제 데이터 수집 방식 결정",["확정","협의 중","미정"],"연동","블랙야크 제품의 봉제 데이터를 누가 어떻게 모을지 정해졌는지예요.")
+  +seg(k+"_isae","이새에프앤씨 제품 봉제 데이터 수집 방식 결정",["확정","협의 중","미정"],"연동","이새에프앤씨 제품의 봉제 데이터를 누가 어떻게 모을지 정해졌는지예요.");
+}
+function productItems(k){ return ''
+  +subhead("제품 정보","완성된 제품의 소재, 재활용, 유해물질 같은 기본 정보예요.")
+  +cap(k+"_bom","제품 소재 구성표(BOM)","규제","제품이 어떤 소재로 이뤄졌는지 정리한 표예요.")
+  +cap(k+"_recyc","재활용 함량","규제","제품에 재활용 소재가 몇 퍼센트 들어갔는지예요.")
+  +cap(k+"_soc","유해물질 정보(SoC)","규제","규제로 관리하는 유해물질이 들어 있는지에 대한 정보예요.")
+  +cap(k+"_care","케어 관리 정보(세탁 등)","규제","세탁이나 관리 방법 같은 소비자 안내 정보예요.")
+  +subhead("제품 식별 표시","제품을 구분하는 코드와 QR, 라벨을 어디에 붙일지에 대한 내용이에요.")
+  +seg(k+"_gtin","제품 식별코드 체계",["GTIN","자체 SKU","미사용"],"규제","제품을 구분하는 표준 코드(GTIN)나 자체 코드를 쓰는지예요.")
+  +segEtc(k+"_qr","QR/RFID/라벨 부착 위치 계획",["케어라벨","행택","별도 태그","미정"],"규제","제품 어디에 QR이나 라벨을 붙일 계획인지예요.")
+  +cap(k+"_label","기존 케어라벨, 행택 구조 정보","","지금 쓰는 케어라벨과 행택의 구성 정보예요.")
+  +subhead("공급망 정보","어느 협력사를 거쳤는지, 공정 이력을 잇는 내용이에요.")
+  +cap(k+"_tier","협력사(Tier) 정보","추적","어떤 협력사들을 거쳐 만들어졌는지에 대한 정보예요.")
+  +cap(k+"_hist","제품별 공정 이력 연결","추적","제품마다 어떤 공정을 거쳤는지 이력을 잇는지예요.")
+  +subhead("공개 범위","소비자에게 공개할 정보와 비밀로 둘 정보를 나누는 부분이에요.")
+  +seg(k+"_open","소비자 공개와 비공개(영업비밀) 범위 정의",["정의됨","검토 중","미정"],"규제","어떤 정보를 소비자에게 공개하고 어떤 건 비공개로 할지 정했는지예요.")
+  +subhead("시스템 데이터 제공","제품 정보를 어떤 시스템으로 관리하고 전달할 수 있는지예요.")
+  +seg(k+"_plm","제품정보 관리 시스템(PLM 등) 보유",["보유","미보유","검토 중"],"연동","제품 정보를 관리하는 시스템(PLM 등)이 있는지예요.")
+  +seg(k+"_form","데이터 제공 형태",["시스템 추출","엑셀","PDF","협의"],"연동","정보를 어떤 형태로 줄 수 있는지예요.");
+}
+function tracerItems(k){ return ''
+  +subhead("추적물질 적용 기록","추적물질을 언제, 어느 공정에 넣었는지 기록하고 관리하는 부분이에요.")
+  +cap(k+"_stage","추적물질을 적용하는 공정 단계 기록","추적","추적물질을 어느 공정 단계에서 넣는지 기록해 두는지를 묻는 거예요.")
+  +cap(k+"_time","추적물질 적용 시점과 일자 기록","추적","추적물질을 언제(날짜) 넣었는지 기록해 두는지를 묻는 거예요.")
+  +cap(k+"_type","적용한 추적물질 종류와 투입량 기록","","어떤 추적물질을 얼마나 넣었는지 기록해 두는지를 묻는 거예요.")
+  +cap(k+"_lot","적용 대상 Lot(원사, 원단, 제품)과 연결 기록","추적","추적물질을 넣은 묶음(Lot)이 어떤 제품으로 이어지는지 연결해 두는지를 묻는 거예요.")
+  +subhead("데이터 제공","기록한 적용 정보를 우리에게 어떤 형태로 줄 수 있는지에 대한 내용이에요.")
+  +seg(k+"_form","추적물질 적용 정보 제공 형태",FORM,"연동","그 기록을 우리에게 어떤 형태로 줄 수 있는지를 묻는 거예요.");
+}
+function pcfItems(k){ return ''
+  +subhead("추적물질 검증","제품에 추적물질이 들어 있는지 시험으로 확인하고 성적서를 내는 부분이에요.")
+  +seg(k+"_tracer","추적물질 검출 시험 항목과 방법 정의",["정의됨","협의 중","미정"],"검증","어떤 방법으로 추적물질을 검출할지 정해졌는지를 묻는 거예요.")
+  +seg(k+"_tracertime","추적물질 검증에 걸리는 기간",["1주 이내","2~3주","협의 필요"],"검증","검증 시험에 보통 얼마나 걸리는지를 묻는 거예요.")
+  +subhead("PCF 탄소 산정","제품의 탄소발자국(PCF)을 어떤 방법으로 계산하는지에 대한 내용이에요.")
+  +segEtc(k+"_sw","사용 LCA 소프트웨어",["SimaPro","GaBi","OpenLCA"],"탄소","탄소 계산에 쓰는 전문 프로그램이에요. 예) SimaPro.")
+  +segEtc(k+"_db","사용 LCI 데이터베이스",["Ecoinvent","KEITI","Sphera"],"탄소","탄소 계산에 쓰는 기준 데이터베이스예요. 예) Ecoinvent.")
+  +cap(k+"_coef","산정 계수와 default 값 제공 범위","탄소","직접 측정이 없을 때 쓰는 표준 계산값을 어디까지 줄 수 있는지를 묻는 거예요.")
+  +seg(k+"_boundary","산정 범위(시스템 경계) 확정 시점",["확정","협의 중","미정"],"탄소","탄소 계산의 범위(어디부터 어디까지)를 언제 정할지를 묻는 거예요.");
+}
+function pilotItems(k){ return ''
+  +subhead("설비 생산","보유한 시험 설비와 시제품 생산 기록에 대한 내용이에요.")
+  +checklist("보유 Pilot 설비 종류 (복수 선택)",k+"_equip",["방사","방적(정방)","편직","제직","염색 소형","물성 분석 장비"],"시제품 제작에 쓸 수 있는 설비를 모두 골라주세요.")
+  +cap(k+"_lot","시제품 생산 Lot 기록","추적","시제품을 만들 때도 묶음번호로 기록하는지예요.")
+  +cap(k+"_input","시제품 규모 투입재와 생산량","탄소","시제품을 만들 때 들어간 재료와 생산량이에요.")
+  +energy(k+"_energy","시제품 규모 에너지 사용량","시제품 제작에 쓰는 에너지의 양이에요. 알 수 있는 범위를 골라주세요.")
+  +subhead("분석 제공","물성 시험 항목과 결과를 어떤 형태로 주는지에 대한 내용이에요.")
+  +checklist("제공 가능 물성 분석 항목 (복수 선택)",k+"_props",["인장강도","신도","마모도","필링","내수도","투습도","발수도","항균성","추적물질 함유량"],"측정해 줄 수 있는 물성 시험 항목을 모두 골라주세요.")
+  +segEtc(k+"_form","분석 결과 제공 형식",["시험성적서(PDF)","Excel"],"검증","분석 결과를 어떤 형태로 주는지예요. 예) 성적서 PDF, 엑셀.");
+}
+const TRACKS={
+  A:()=>trackTag(IC.spool,"원사(방사)")+`<div class="card">`+yarnItems("a")+`</div>`,
+  B:()=>trackTag(IC.cone,"원사(방적)")+`<div class="card">`+yarnItems("b")+`</div>`,
+  C:()=>trackTag(IC.grid,"원단(제·편직)")+`<div class="card">`+fabricItems("c")+`</div>`,
+  D:()=>trackTag(IC.droplet,"염색가공")+`<div class="card">`+dyeItems("d")+`</div>`,
+  E1:()=>trackTag(IC.link,"봉제")+`<div class="card">`+sewItems("e1")+`</div>`,
+  E2:()=>trackTag(IC.pkg,"완제품/브랜드")+`<div class="card">`+productItems("e2")+`</div>`,
+  F:()=>trackTag(IC.shield,"추적물질")+`<div class="card">`+tracerItems("f")+`</div>`,
+  G:()=>trackTag(IC.flask,"시험 검증")+`<div class="card">`+pcfItems("g")+`</div>`,
+  I:()=>trackTag(IC.share,"공급망 조율(지원)")+`<div class="card"><div class="legend-row">방문 일정 조율과 계측 지원을 담당하는 기관으로, 별도 데이터 점검 문항이 없습니다. 담당자 정보만 제출해 주시면 됩니다.</div></div>`,
+  J:()=>trackTag(IC.sync,"데이터 연동(실측 솔루션)")+`<div class="card">`
+    +`<div class="pcf-note">㈜시제는 봉제 공정을 <b>IoT·AI로 실측</b>하고 DPP Data Carrier를 부착하는 솔루션 기업입니다. 봉제 생산 데이터를 직접 보유한 제조사가 아니므로, 아래는 <b>그 실측 데이터를 CARE ID와 어떻게 연동할지</b>를 확인하는 문항입니다.</div>`
+    +subhead("실측 데이터 개요","봉제 공정에서 어떤 데이터를 실측(IoT 등)으로 수집하는지에 대한 내용이에요.")
+    +checklist("실측 수집 데이터 (복수 선택)","j_data",["작업 시간(표준시간)","설비 전력 사용량","공정 이동 기록","생산 수량","작업자/라인 정보","탄소 배출 환산값"],"센서·IoT로 측정해 수집하는 봉제 공정 데이터를 모두 골라주세요.")
+    +seg("j_unit","데이터 수집 단위",["제품 단위","Lot/Batch","작업자","라인","공정"],"","데이터를 어떤 단위로 모으는지예요. 예) 제품 한 점, 라인 단위.")
+    +subhead("CARE ID 연동 방식","시제 시스템의 데이터를 CARE ID DPP로 전달하는 방법에 대한 내용이에요.")
+    +segEtc("j_api","데이터 제공 방식",["REST API","Webhook","파일(CSV/JSON)","미정"],"연동","CARE ID로 데이터를 어떤 방식으로 줄 수 있는지예요.")
+    +seg("j_format","데이터 포맷",["JSON","CSV","XML","협의"],"연동","주고받는 데이터의 형식이에요.")
+    +seg("j_freq","데이터 전송 주기",["실시간","주기적 배치","수동 업로드","협의"],"연동","데이터를 얼마나 자주 보낼 수 있는지예요.")
+    +seg("j_auth","연동 인증 방식",["API Key","OAuth 2.0","협의","미정"],"연동","연동 시 보안 인증을 어떻게 하는지예요.")
+    +seg("j_doc","API 명세서 제공 가능",["가능","준비 중","협의"],"연동","연동에 필요한 API 설명서를 줄 수 있는지예요.")
+    +subhead("식별자 연계","시제 데이터와 CARE ID 제품(DPP)을 서로 연결할 기준 값에 대한 내용이에요.")
+    +segEtc("j_id","제품/공정 식별 체계",["QR 코드","바코드","자체 제품 ID","RFID"],"연동","제품·공정을 구분하는 식별 방식이에요. 예) QR, 바코드.")
+    +cap("j_key","제품/Lot 단위 연계 키 제공","연동","어떤 제품·묶음(Lot)의 데이터인지 연결할 키(번호)를 줄 수 있는지예요.")
+    +subhead("탄소(PCF) 데이터","작업시간을 탄소로 환산한 결과를 어떻게 주는지에 대한 내용이에요.")
+    +seg("j_pcf","작업시간→탄소 환산값 제공 형태",["API 연동","파일","대시보드","협의"],"탄소","봉제 공정의 탄소 환산 결과를 어떤 형태로 주는지예요.")
+    +seg("j_pcfready","공정별 탄소 산정 결과 제공 가능 시점",["확정","협의 중","미정"],"탄소","봉제 공정별 탄소 산정 결과를 언제부터 줄 수 있는지예요.")
+    +`</div>`,
+  K:()=>trackTag(IC.link,"재생 원료 연동 (제클린)")+`<div class="card">`
+    +`<div class="pcf-note">일신방직의 r-Cotton(재생 면) 원료는 <b>제클린</b>이 폐섬유 기반으로 제조하는 기술용역 단계입니다. 제클린도 자체 DPP를 운영하므로, 이 재생 원료 단계의 데이터·DPP를 CARE ID와 어떻게 연결할지를 확인하는 문항입니다.</div>`
+    +subhead("재생 원료(r-Cotton) 정보","제클린이 만든 재생 면이 일신방직 방적에 얼마나 들어가는지에 대한 내용이에요.")
+    +cap("k_ratio","r-Cotton 투입 비율(%)과 사용량","규제","방적사에 재생 면이 몇 퍼센트, 얼마나 들어가는지예요.")
+    +cap("k_lotlink","제클린 재생 원료 Lot과 방적 Lot 연결","추적","어떤 재생 원료 묶음으로 어떤 방적사를 만들었는지 번호로 잇는지예요.")
+    +subhead("제클린 DPP·데이터 연동","제클린이 가진 재생 원료 DPP·데이터를 CARE ID와 연결할 수 있는지에 대한 내용이에요.")
+    +seg("k_dpp","제클린 측 재생 원료 DPP/데이터 연동 가능 여부",["가능","검토 필요","어려움","미정"],"연동","제클린의 재생 원료 DPP나 데이터를 CARE ID와 연결할 수 있는지예요.")
+    +segEtc("k_how","연동 방식",["제클린이 직접 API/링크 제공","일신방직 경유 전달","파일(CSV/PDF)","협의"],"연동","제클린 데이터를 어떤 경로로 CARE ID에 연결할지예요.")
+    +cap("k_key","제클린–CARE ID 연계 식별자(Lot/배치 키) 공유","연동","두 시스템을 연결할 공통 식별 번호(키)를 공유할 수 있는지예요.")
+    +seg("k_form","제클린 데이터 제공 형태",["API/링크","엑셀","PDF","협의"],"연동","제클린 측 데이터를 어떤 형태로 받을 수 있는지예요.")
+    +`</div>`,
+  L:()=>trackTag(IC.tube,"시제품 국내 생산 (수요기업)")+`<div class="card">`
+    +`<div class="pcf-note">블랙야크는 본 과제의 <b>수요기업(브랜드)</b>으로 완제품은 주로 해외에서 생산하며, CARE ID와는 별도 실증사업도 진행 중입니다. 다만 <b>탄소 저감은 국내 생산이 전제</b>이므로, 이번 시제품(아웃도어·워크웨어)의 국내 생산을 어떻게 할지 확인합니다. 제품 사양·디자인은 블랙야크가 제공합니다.</div>`
+    +subhead("시제품 국내 생산","이번 과제 시제품을 국내 어디서 만들지에 대한 내용이에요.")
+    +checklist("시제품 국내 생산 주체 후보 (복수 선택)","l_maker",["이새와 협업","유니아텍스와 협업","국내 샘플실 발주","자체 국내 샘플실","미정(검토 중)"],"이번 시제품을 국내에서 누가 생산할지 후보를 모두 골라주세요. 국내 생산이라야 탄소 저감 효과가 잡힙니다.")
+    +seg("l_status","국내 생산 방식 확정 여부",["확정","협의 중","미정"],"","생산 주체·방식이 정해졌는지예요.")
+    +subhead("블랙야크 제공 정보","블랙야크가 시제품 생산을 위해 제공하는 자료에 대한 내용이에요.")
+    +checklist("제공 정보 (복수 선택)","l_provide",["제품 사양서(Tech Pack)","패턴/디자인","소재 구성(BOM)","부자재 정보","품질·성능 기준"],"블랙야크가 제공하는 자료를 모두 골라주세요.")
+    +`</div>`,
+};
+
+function tc(box){ const it=box.closest(".check-item"); it.classList.toggle("checked"); const q=box.closest(".q"); if(q) q.classList.remove("q-error"); }
+function tcEtc(box){ const it=box.closest(".check-item"); it.classList.toggle("checked");
+  const e=it.parentElement.querySelector(".etc-input[data-foretc]"); if(e) e.style.display=it.classList.contains("checked")?"block":"none";
+  const q=box.closest(".q"); if(q) q.classList.remove("q-error"); }
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.type==="radio"){
+    const etc=document.querySelector(`.etc-input[data-for="${t.name}"]`);
+    if(etc){ const c=document.querySelector(`input[name="${t.name}"]:checked`); etc.style.display=(c&&c.value==="기타")?"block":"none"; }
+    const q=t.closest(".q"); if(q) q.classList.remove("q-error");
+  }
+});
+document.addEventListener("input",e=>{ if(e.target.classList&&e.target.classList.contains("etc-input")){ const q=e.target.closest(".q"); if(q) q.classList.remove("q-error"); } });
+
+async function checkPw(){
+  const pw=val('pw');
+  if(!pw) return;
+  const btn=document.querySelector('.pw-btn');
+  btn.disabled=true; btn.textContent='확인 중...';
+  try {
+    const res = await postJSON({action:'auth', password:pw});
+    if(res.ok){
+      SESSION=res;
+      if($('orgDisplay')) $('orgDisplay').textContent=SESSION.org;
+      $('cover').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      window.scrollTo(0,0);
     } else {
-      data.groups[g] = [...rowsEl(g).querySelectorAll('.rowcard')].map(card=>{ const o={}; card.querySelectorAll('[data-c]').forEach(el=> o[el.dataset.c]=el.value.trim()); return o; }).filter(o=>Object.values(o).some(v=>v!==''));
+      $('pwBox').classList.add('shake');
+      setTimeout(()=>$('pwBox').classList.remove('shake'),460);
+      $('pw').value=''; $('pw').focus();
     }
-  });
-  return data;
-}
-function applyData(d){
-  if(!d) return;
-  if(d.fields) Object.keys(d.fields).forEach(k=>{ const el=document.querySelector('input[data-f="'+k+'"],textarea[data-f="'+k+'"],select[data-f="'+k+'"]'); if(el && !(k==='company' && el.readOnly)) el.value=d.fields[k]; });
-  document.querySelectorAll('.chips[data-f]').forEach(box=>{ const want=(d.chips&&d.chips[box.dataset.f])||[]; box.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', want.includes(c.dataset.v))); });
-  GROUPS.forEach(g=>{
-    rowsEl(g).querySelectorAll('.rowcard').forEach(c=>c.remove());
-    const arr=(d.groups&&d.groups[g])||[];
-    arr.forEach(item=>{ const card=addRow(g); fillRow(card,item); if(g==='step' && item.images && item.images.length){ card.__imgs=item.images.slice(); renderStepThumbs(card); } });
-    syncEmpty(g);
-  });
-  updateProgress();
-}
-function resetForm(){
-  document.querySelectorAll('input[data-f],textarea[data-f],select[data-f]').forEach(el=>{ if(el.dataset.f==='data_year'){ el.value='2025'; } else { el.value=''; } el.readOnly=false; el.style.background=''; el.classList.remove('miss'); });
-  document.querySelectorAll('.chips .chip.on').forEach(c=>c.classList.remove('on'));
-  GROUPS.forEach(g=>{ rowsEl(g).querySelectorAll('.rowcard').forEach(c=>c.remove()); syncEmpty(g); });
-  updateProgress();
-}
-
-/* ---------- misc utils ---------- */
-function safeCompany(){ return (document.querySelector('[data-f="company"]').value.trim()||'미입력').replace(/[\\/:*?"<>|]/g,''); }
-function download(content, name, mime){
-  const blob = (content instanceof Blob) ? content : new Blob([content], {type:mime+';charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-}
-function toast(msg){ const t=document.getElementById('toast'); document.getElementById('toastMsg').textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2800); }
-
-/* ============================================================
-   Google Sheets 수집 연동 — SHEET_ENDPOINT 를 GAS /exec URL 로 교체
-   ============================================================ */
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbyJfyu6I7XeMlqgOIhrHAB-MihWc8GDhSjcvLl3yDJlPVIX6FKxuSGNJP8oZYzRDvzy/exec";
-
-async function sendToSheet(payload){
-  if(!SHEET_ENDPOINT) return;
-  try{ await fetch(SHEET_ENDPOINT, { method: "POST", body: JSON.stringify(payload) }); }
-  catch(err){ console.warn("[CARE ID] 시트 전송 실패 (로컬 데이터는 보존됨):", err); }
-}
-
-/* ============================================================
-   storage layer (localStorage best-effort, in-memory fallback)
-   ※ 프런트엔드 프로토타입용. 실제 다중 기업·다기기 운영은 서버(DB)가 필요합니다.
-   ============================================================ */
-const MEM={};
-const HAS_LS=(function(){ try{ const k='__t'+Math.random(); localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch(e){ return false; } })();
-const LS={
-  get(k){ try{ return HAS_LS? localStorage.getItem(k) : (k in MEM? MEM[k]:null); }catch(e){ return (k in MEM? MEM[k]:null); } },
-  set(k,v){ try{ if(HAS_LS) localStorage.setItem(k,v); else MEM[k]=v; }catch(e){ MEM[k]=v; } },
-  del(k){ try{ if(HAS_LS) localStorage.removeItem(k); else delete MEM[k]; }catch(e){ delete MEM[k]; } }
-};
-const K_ACC='careid_accounts_v1', K_SES='careid_session_v1';
-function accounts(){ try{ return JSON.parse(LS.get(K_ACC)||'{}'); }catch(e){ return {}; } }
-function saveAccounts(o){ LS.set(K_ACC, JSON.stringify(o)); }
-function getSession(){ return LS.get(K_SES); }
-function setSession(id){ LS.set(K_SES, id); }
-function clearSession(){ LS.del(K_SES); }
-function currentAccount(){ const a=accounts(); return a[getSession()]||null; }
-function normId(s){ return (s||'').replace(/[\s-]/g,'').toLowerCase(); }
-function hashPw(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return 'h'+h.toString(16); }
-function draftKey(id){ return 'careid_draft_'+id; }
-function subKey(id){ return 'careid_submission_'+id; }
-
-/* ---------- draft (임시저장) ---------- */
-function saveDraft(silent){ const id=getSession(); if(!id) return; LS.set(draftKey(id), JSON.stringify(collect())); if(!silent) toast('임시저장했습니다. 다음에 로그인하면 이어서 작성할 수 있습니다.'); }
-function loadDraft(id){ const raw=LS.get(draftKey(id)); if(!raw) return false; try{ applyData(JSON.parse(raw)); return true; }catch(e){ return false; } }
-
-/* ---------- progress ---------- */
-function sectionHasData(sec){
-  let has=false;
-  sec.querySelectorAll('input[data-f],textarea[data-f],select[data-f]').forEach(el=>{ if(el.value.trim()!=='') has=true; });
-  sec.querySelectorAll('.chips .chip.on').forEach(()=>has=true);
-  sec.querySelectorAll('.rowcard [data-c]').forEach(el=>{ if(el.value.trim()!=='') has=true; });
-  sec.querySelectorAll('.rowcard').forEach(c=>{ if(c.__imgs && c.__imgs.length) has=true; });
-  return has;
-}
-function updateProgress(){
-  const pt=document.getElementById('progTxt'); if(!pt) return;
-  let done=0; const secs=document.querySelectorAll('section[data-section]');
-  secs.forEach(sec=>{ if(sectionHasData(sec)) done++; });
-  const total=secs.length;
-  pt.textContent = done+' / '+total+' 섹션';
-  document.getElementById('progBar').style.width = (done/total*100)+'%';
-}
-
-/* ============================================================
-   제출본 요약 렌더 (중립 · 전체 항목)  +  PCF/LCA 구조화
-   ============================================================ */
-function kvHTML(pairs){ return '<div class="kv">'+pairs.map(p=>'<div class="kk">'+esc(p[0])+'</div><div class="vv">'+(p[1]?esc(p[1]):'<span class="muted">-</span>')+'</div>').join('')+'</div>'; }
-function tblHTML(headers, rows){
-  if(!rows.length) return '<div class="pv-empty">작성된 항목이 없습니다.</div>';
-  return '<table class="pvt"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
-}
-function stepsHTML(steps){
-  if(!steps.length) return '<div class="pv-empty">작성된 공정 단계가 없습니다.</div>';
-  return '<div class="pv-steps">'+steps.map((r,i)=>{ const imgs=r.images||[];
-    return '<div class="pv-step"><div class="pv-step-h"><span class="pv-step-no">'+String(i+1).padStart(2,'0')+'</span><span class="pv-step-name">'+esc(r.name||'(공정명 미입력)')+'</span>'+(r.note?'<span class="pv-step-note">'+esc(r.note)+'</span>':'')+'</div>'
-      +(r.desc?'<div class="pv-step-desc">'+esc(r.desc)+'</div>':'')
-      +(imgs.length?'<div class="pv-step-imgs">'+imgs.map((im,j)=>'<figure><img src="'+im.url+'"><figcaption>'+esc(im.name||('이미지 '+(j+1)))+'</figcaption></figure>').join('')+'</div>':'')
-      +'</div>'; }).join('')+'</div>';
-}
-function pretextHTML(t){ return t ? ('<div class="pretext">'+esc(t)+'</div>') : '<div class="pv-empty">작성 내용이 없습니다.</div>'; }
-function subLabel(t){ return '<div class="pv-sub">'+esc(t)+'</div>'; }
-function secHTML(n,title,en,inner){ return '<div class="pv-sec"><h4>'+esc(n)+'. '+esc(title)+(en?'<span class="en">'+esc(en)+'</span>':'')+'</h4>'+inner+'</div>'; }
-
-function pcfModel(d){
-  const F=d.fields,C=d.chips,G=d.groups;
-  return {
-    company:F.company, dataYear:F.data_year,
-    product:{ procTypes:C.proc_type||[], name:F.prod_name, model:F.prod_model },
-    reduction:{ methods:C.cut_type||[], detail:F.cut_detail },
-    process:{ mainName:F.proc_main, address:F.proc_addr, steps:G.step||[] },
-    materialInput:(G.input||[]).map(r=>({category:r.use||r.kind, material:r.material, qty:r.qty, unit:r.unit})),
-    energyWater:{ water:F.en_water, steam:F.en_steam, elec:F.en_elec, kerosene:F.en_kerosene, diesel:F.en_diesel, petroleum:F.en_petro, lng:F.en_lng, lpg:F.en_lpg },
-    metering:G.meter||[],
-    calcPlan:{ mes:F.plan_mes, manage:F.plan_manage, etc:F.plan_etc }
-  };
-}
-function lcaModel(d){
-  const F=d.fields,G=d.groups;
-  return {
-    writer:{ writeDate:F.write_date, org:F.w_org, name:F.w_name, dept:F.w_dept, title:F.w_title, tel:F.w_tel, mobile:F.w_mobile, fax:F.w_fax, email:F.w_email,
-             manager:{ org:F.m_org, name:F.m_name, phone:F.m_phone, mobile:F.m_mobile, email:F.m_email } },
-    dataYear:F.data_year,
-    process:{ mainName:F.proc_main, address:F.proc_addr, steps:G.step||[] },
-    input:G.input||[], energy:G.energy||[], maintenance:G.maint||[], output:G.output||[]
-  };
-}
-
-function renderSubmission(sub){
-  const d={fields:sub.raw.fields, chips:sub.raw.chips, groups:sub.raw.groups};
-  const F=d.fields,C=d.chips,G=d.groups;
-  let h='';
-  h+='<div class="doc-h"><div class="dk">제출 완료 · 작성 내용 확인본</div><h3>'+esc(F.company||'(기업명)')+'</h3>'
-    +'<div class="meta">과제 RS-2026-25540842 · 수집기관 윤회㈜ CARE ID<br>제출일시 '+esc(new Date(sub.submittedAt).toLocaleString('ko-KR'))+' &nbsp;·&nbsp; 데이터 기준연도 '+esc(F.data_year||'-')+'</div></div>';
-  h+=secHTML('01','작성자 · 기업','WRITER', kvHTML([['기업명',F.company],['작성일자',F.write_date],['데이터 기준연도',F.data_year],['작성자',[F.w_org,F.w_name,F.w_title,F.w_dept].filter(Boolean).join(' / ')],['작성자 연락',[F.w_tel,F.w_mobile,F.w_fax,F.w_email].filter(Boolean).join(' · ')],['실무 담당자',[F.m_org,F.m_name,F.m_phone,F.m_mobile,F.m_email].filter(Boolean).join(' / ')]]));
-  h+=secHTML('02','제품 개요','PRODUCT', kvHTML([['해당 공정 구분',(C.proc_type||[]).join(', ')],['제품명(스펙)',F.prod_name],['모델명',F.prod_model]]));
-  h+=secHTML('03','저감 계획','REDUCTION', kvHTML([['저감 방법',(C.cut_type||[]).join(', ')]])+subLabel('상세 내용')+pretextHTML(F.cut_detail));
-  h+=secHTML('04','제조 공정 · 흐름','PROCESS', kvHTML([['대표 공정명',F.proc_main],['소재지(공장)',F.proc_addr]])+subLabel('공정 단계 (사진 포함)')+stepsHTML(G.step||[]));
-  h+=secHTML('05','투입물 (Input)','INPUT', tblHTML(['구분','물질명','양','단위','용도','원산지','수송방법','운송경로','비고'],(G.input||[]).map(r=>[r.kind,r.material,r.qty,r.unit,r.use,r.origin,r.transport,r.route,r.note])));
-  h+=secHTML('06','에너지 · 용수','ENERGY & WATER', subLabel('연간 총괄')+kvHTML([['용수 (만 톤)',F.en_water],['외부 스팀 (만 톤)',F.en_steam],['전력 (kWh)',F.en_elec],['등유 (L)',F.en_kerosene],['경유 (L)',F.en_diesel],['기타 석유류 (L)',F.en_petro],['LNG (Nm³)',F.en_lng],['LPG (Nm³)',F.en_lpg]])+subLabel('에너지 상세')+tblHTML(['구분','물질명','양','단위','용도','비고'],(G.energy||[]).map(r=>[r.kind,r.material,r.qty,r.unit,r.use,r.note])));
-  h+=secHTML('07','유지 및 보수','MAINTENANCE', tblHTML(['구분','물질명','양','단위','용도','비고'],(G.maint||[]).map(r=>[r.kind,r.material,r.qty,r.unit,r.use,r.note])));
-  h+=secHTML('08','산출물 (Output)','OUTPUT', tblHTML(['구분','물질명','양','단위','처리방법','비고'],(G.output||[]).map(r=>[r.kind,r.material,r.qty,r.unit,r.treat,r.note])));
-  h+=secHTML('09','측정계 설치 현황','METERING', tblHTML(['공정명','생산설비','대수','필요 측정계','기존 설치','추가 설치','PCF 관련성'],(G.meter||[]).map(r=>[r.proc,r.equip,r.count,r.need,r.existing,r.plan,r.rel])));
-  h+=secHTML('10','PCF 산정 세부 계획','DATA PLAN', subLabel('PLC / MES 연계')+pretextHTML(F.plan_mes)+subLabel('데이터 수집·관리')+pretextHTML(F.plan_manage)+subLabel('기타')+pretextHTML(F.plan_etc));
-  document.getElementById('subDoc').innerHTML=h;
-  const ds=document.getElementById('doneStamp'); if(ds) ds.textContent='제출일시 · '+new Date(sub.submittedAt).toLocaleString('ko-KR');
-}
-
-/* ============================================================
-   뷰 전환
-   ============================================================ */
-function showView(v){
-  ['auth','form','done'].forEach(x=>{ const el=document.getElementById('view-'+x); if(el) el.classList.toggle('hidden', x!==v); });
-  const ab=document.getElementById('actionbar'); if(ab) ab.classList.toggle('hidden', v!=='form');
-  window.scrollTo({top:0,behavior:'auto'});
-}
-
-/* ============================================================
-   회원가입 / 로그인
-   ============================================================ */
-function authMode(m){
-  document.getElementById('au-login').classList.toggle('hidden', m!=='login');
-  document.getElementById('au-signup').classList.toggle('hidden', m!=='signup');
-  document.querySelectorAll('.auth-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.m===m));
-  document.getElementById('li_msg').textContent=''; document.getElementById('su_msg').textContent='';
-}
-function v(id){ const e=document.getElementById(id); return e? e.value.trim() : ''; }
-function setMsg(id,t){ const e=document.getElementById(id); if(e) e.textContent=t||''; }
-
-function doSignup(){
-  const company=v('su_company'), bizno=v('su_bizno'), manager=v('su_manager'), email=v('su_email'), pw=v('su_pw'), pw2=v('su_pw2');
-  ['su_company','su_bizno','su_email','su_pw'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.toggle('miss', !e.value.trim()); });
-  if(!company||!bizno||!email||!pw){ setMsg('su_msg','기업명 · 사업자등록번호 · 이메일 · 비밀번호는 필수입니다.'); return; }
-  if(pw.length<4){ setMsg('su_msg','비밀번호는 4자 이상으로 설정해 주세요.'); return; }
-  if(pw!==pw2){ setMsg('su_msg','비밀번호가 일치하지 않습니다.'); return; }
-  const accs=accounts(); const id=normId(bizno);
-  if(accs[id]){ setMsg('su_msg','이미 등록된 사업자등록번호입니다. 로그인해 주세요.'); return; }
-  if(Object.keys(accs).some(k=>(accs[k].email||'').toLowerCase()===email.toLowerCase())){ setMsg('su_msg','이미 등록된 이메일입니다.'); return; }
-  const createdAt = new Date().toISOString();
-  accs[id]={ company, bizno, manager, email, pw:hashPw(pw), createdAt };
-  saveAccounts(accs); setSession(id); enterForm(accs[id]); toast('회원가입이 완료되었습니다. 작성을 시작해 주세요.');
-  sendToSheet({ action:"signup", createdAt, company, bizno, manager, email });
-}
-function doLogin(){
-  const idin=v('li_id'), pw=v('li_pw');
-  ['li_id','li_pw'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.toggle('miss', !e.value.trim()); });
-  if(!idin||!pw){ setMsg('li_msg','사업자등록번호(또는 이메일)와 비밀번호를 입력해 주세요.'); return; }
-  const accs=accounts(); let id=normId(idin); let acc=accs[id];
-  if(!acc){ id=Object.keys(accs).find(k=>(accs[k].email||'').toLowerCase()===idin.toLowerCase()); acc=id?accs[id]:null; }
-  if(!acc){ setMsg('li_msg','등록된 계정을 찾을 수 없습니다. 회원가입을 먼저 진행해 주세요.'); return; }
-  if(acc.pw!==hashPw(pw)){ setMsg('li_msg','비밀번호가 올바르지 않습니다.'); return; }
-  setSession(id); enterForm(acc); toast('로그인되었습니다.');
-}
-/* ---------- hidden admin shortcut (※) ---------- */
-const ADMIN_ID='admin';
-function ensureAdmin(){
-  const accs=accounts();
-  if(!accs[ADMIN_ID]){ accs[ADMIN_ID]={ company:'CARE ID 관리자', bizno:'admin', manager:'관리자', email:'admin@careid.center', pw:hashPw('admin'), role:'admin', createdAt:new Date().toISOString() }; saveAccounts(accs); }
-  return accounts()[ADMIN_ID];
-}
-function adminLogin(){ const acc=ensureAdmin(); setSession(ADMIN_ID); enterForm(acc); toast('관리자(admin) 계정으로 로그인했습니다.'); }
-
-function doLogout(){
-  saveDraft(true); clearSession(); resetForm();
-  const bar=document.querySelector('.acct-bar'); if(bar){ bar.classList.remove('admin'); const bd=bar.querySelector('.badge'); if(bd) bd.textContent='로그인'; }
-  const cf=document.querySelector('[data-f="company"]'); if(cf){ cf.readOnly=false; cf.style.background=''; }
-  document.getElementById('li_id').value=''; document.getElementById('li_pw').value=''; setMsg('li_msg',''); authMode('login');
-  showView('auth'); toast('로그아웃되었습니다.');
-}
-function enterForm(acc){
-  const isAdmin=!!(acc && acc.role==='admin');
-  const bar=document.querySelector('.acct-bar'); if(bar) bar.classList.toggle('admin', isAdmin);
-  const badge=bar?bar.querySelector('.badge'):null; if(badge) badge.textContent=isAdmin?'관리자 · ADMIN':'로그인';
-  const an=document.getElementById('acctName'); if(an) an.textContent=acc.company||'';
-  const cf=document.querySelector('[data-f="company"]');
-  if(cf){
-    if(isAdmin){ cf.readOnly=false; cf.style.background=''; }
-    else { cf.value=acc.company||''; cf.readOnly=true; cf.style.background='var(--paper)'; cf.classList.remove('miss'); }
+  } catch(err){
+    console.error('Auth error:',err);
+    $('pwBox').classList.add('shake');
+    setTimeout(()=>$('pwBox').classList.remove('shake'),460);
+    $('pw').value=''; $('pw').focus();
+  } finally {
+    btn.disabled=false; btn.textContent='확인';
   }
-  const nm=document.querySelector('[data-f="w_name"]'); if(nm && !nm.value && !isAdmin) nm.value=acc.manager||'';
-  const em=document.querySelector('[data-f="w_email"]'); if(em && !em.value && !isAdmin) em.value=acc.email||'';
-  loadDraft(getSession());
-  if(cf && !isAdmin) cf.value=acc.company||'';
-  updateProgress(); showView('form');
 }
+$("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") checkPw(); });
 
-/* ============================================================
-   제출
-   ============================================================ */
-const REQUIRED=[['company','기업명'],['w_name','작성자 성명'],['w_mobile','작성자 휴대폰'],['w_email','작성자 이메일'],['prod_name','제품명(스펙)'],['proc_main','대표 공정명'],['proc_addr','소재지']];
-function validateRequired(){
-  document.querySelectorAll('section [data-f].miss').forEach(e=>e.classList.remove('miss'));
-  const miss=[];
-  REQUIRED.forEach(([f,label])=>{ const el=document.querySelector('[data-f="'+f+'"]'); if(el && !el.value.trim()){ el.classList.add('miss'); miss.push({el,label}); } });
-  return miss;
+function show(step){ ["step-intro","step-questions","step-done"].forEach(s=>$(s).classList.toggle("hidden",s!==step)); }
+
+function goQuestions(){
+  const reqs=["name","phone","email"]; let ok=true, first=null;
+  reqs.forEach(id=>{ const el=$(id); if(!el.value.trim()){ el.classList.add("err"); ok=false; if(!first)first=el; } else el.classList.remove("err"); });
+  if(!ok){ $("introMsg").style.display="block"; first.focus(); return; }
+  $("introMsg").style.display="none";
+  buildQuestions(); show("step-questions"); window.scrollTo(0,0);
 }
-async function doSubmit(){
-  const miss=validateRequired();
-  if(miss.length){
-    toast('필수 항목 '+miss.length+'개가 비어 있습니다. 표시된 칸을 채워 주세요.');
-    miss[0].el.scrollIntoView({behavior:'smooth', block:'center'}); try{ miss[0].el.focus(); }catch(e){}
-    return;
+function goIntro(){ show("step-intro"); window.scrollTo(0,0); }
+function goHome(){ show("step-intro"); window.scrollTo(0,0); }
+
+function buildQuestions(){
+  const org=SESSION.org;
+  const tracks=SESSION.tracks||[];
+  const hyeonhwang=SESSION.hyeonhwang||false;
+  $("orgHeaderCard").innerHTML=`<div class="org-header"><div class="oh-icons">${tracks.map(t=>`<div class="oh-icon">${TRACK[t].icon}</div>`).join("")}</div>`
+    +`<div><div class="oh-name">${org}</div><div class="oh-stage">${tracks.map(t=>TRACK[t].name).join(" / ")}</div></div></div>`;
+
+  // 공식 양식(현황표 + LCI) — 제조 공정 보유 기관만
+  if(hyeonhwang){
+    $("pcf-body").innerHTML=
+        trackTag(IC.gauge,"PCF 저감·산정 현황표 (수출협회)")+`<div class="card">`+hyeonhwangItems()+`</div>`
+      + trackTag(IC.layers,"LCI 투입/산출 데이터 (KOTITI)")+`<div class="card">`+lciItems()+`</div>`;
+    ["meter","proc","input","energy","maint","output"].forEach(id=>dtAdd(id));
+  } else {
+    $("pcf-body").innerHTML="";
   }
-  if(!confirm('작성하신 내용을 제출하시겠습니까?\n제출 후에도 수정하기로 다시 제출할 수 있습니다.')) return;
-  const d=collect(); const acc=currentAccount()||{};
-  const sub={
-    action: "submit",
-    _meta:{ form:'CARE_ID_PCF_LCA', project:'RS-2026-25540842', version:'submit-v1' },
-    account:{ company:acc.company, bizno:acc.bizno, manager:acc.manager, email:acc.email },
-    submittedAt:new Date().toISOString(),
-    raw:{ fields:d.fields, chips:d.chips, groups:d.groups },
-    pcf:pcfModel(d),
-    lca:lcaModel(d)
-  };
-  const id=getSession(); if(id){ LS.set(subKey(id), JSON.stringify(sub)); LS.set(draftKey(id), JSON.stringify(d)); }
-  window.__submission=sub;
-  const btn=document.querySelector('[onclick="doSubmit()"]');
-  if(btn){ btn.disabled=true; btn.textContent="전송 중..."; }
-  try{ await sendToSheet(sub); } catch(e){}
-  if(btn){ btn.disabled=false; btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>제출하기'; }
-  renderSubmission(sub); showView('done');
-}
-function downloadSubmission(){
-  const sub=window.__submission; if(!sub){ toast('제출 내용을 찾을 수 없습니다.'); return; }
-  download(JSON.stringify(sub,null,2), 'CARE_ID_제출본_'+safeCompany()+'.json', 'application/json');
-  toast('제출 내용을 내려받았습니다 (JSON).');
-}
-function printSubmission(){ window.print(); }
-function editAgain(){ showView('form'); toast('수정 후 다시 ‘제출하기’를 눌러 주세요.'); }
 
-/* ============================================================
-   init
-   ============================================================ */
-(function init(){
-  GROUPS.forEach(g=> syncEmpty(g));
-  // paste an image while a step row field is focused -> attach to that step
-  document.addEventListener('paste', e=>{
-    const vf=document.getElementById('view-form'); if(!vf || vf.classList.contains('hidden')) return;
-    const ae=document.activeElement; const card=ae && ae.closest ? ae.closest('.rowcard[data-row="step"]') : null; if(!card) return;
-    const items=(e.clipboardData && e.clipboardData.items)||[];
-    const imgs=[...items].filter(it=>/^image\//.test(it.type)).map(it=>it.getAsFile()).filter(Boolean);
-    if(imgs.length){ e.preventDefault(); addStepImages(card, imgs); }
+  $("track-body").innerHTML=tracks.map(t=>`<div class="track-block">${TRACKS[t]?TRACKS[t]():""}</div>`).join("");
+  let sub=tracks.map(t=>TRACK[t].name).join(", ");
+  if(hyeonhwang) sub="PCF 현황표 · LCI · "+sub;
+  $("topSub").textContent=org+"  |  "+sub;
+}
+
+function isAnswered(q){
+  const ci=q.querySelectorAll(".check-item");
+  if(ci.length){
+    let any=false,bad=false;
+    ci.forEach(it=>{ if(it.classList.contains("checked")){ any=true;
+      if(it.querySelector(".ci-label").innerText==="기타"){ const e=q.querySelector(".etc-input[data-foretc]"); if(!e||!e.value.trim()) bad=true; } } });
+    return any && !bad;
+  }
+  const rs=q.querySelectorAll('input[type=radio]');
+  if(rs.length){ const c=[...rs].find(r=>r.checked); if(!c) return false;
+    if(c.value==="기타"){ const e=q.querySelector('.etc-input[data-for]'); return !!(e&&e.value.trim()); } return true; }
+  const tx=q.querySelector('input[type=text], textarea');
+  if(tx) return tx.value.trim()!=="";
+  return true;
+}
+function validateQuestions(){
+  let first=null;
+  document.querySelectorAll("#track-body .q").forEach(q=>{
+    if(isAnswered(q)) q.classList.remove("q-error");
+    else { q.classList.add("q-error"); if(!first) first=q; }
   });
-  // submit on Enter inside auth fields
-  ['li_id','li_pw'].forEach(id=>{ const e=document.getElementById(id); if(e) e.addEventListener('keydown', ev=>{ if(ev.key==='Enter') doLogin(); }); });
+  if(first){ first.scrollIntoView({behavior:"smooth",block:"center"}); return false; }
+  return true;
+}
+function collectAnswer(q){
+  const ci=q.querySelectorAll(".check-item");
+  if(ci.length){
+    let a=[]; ci.forEach(it=>{ if(it.classList.contains("checked")){ let t=it.querySelector(".ci-label").innerText;
+      if(t==="기타"){ const e=q.querySelector(".etc-input[data-foretc]"); if(e&&e.value.trim()) t="기타: "+e.value.trim(); } a.push(t); } });
+    return a.length?a.join(", "):"(미선택)";
+  }
+  const rs=q.querySelectorAll('input[type=radio]');
+  if(rs.length){ const c=[...rs].find(r=>r.checked); if(!c) return "(미응답)"; let v=c.value;
+    if(v==="기타"){ const e=q.querySelector('.etc-input[data-for]'); if(e&&e.value.trim()) v="기타: "+e.value.trim(); } return v; }
+  const tx=q.querySelector('input[type=text], textarea');
+  if(tx) return tx.value.trim()||"(미응답)";
+  return "";
+}
+function labelText(el){ const lb=el.querySelector(".q-label"); if(!lb) return ""; return lb.firstChild?lb.firstChild.textContent.trim():lb.innerText.trim(); }
+function headText(el){
+  // subhead title only — strip out source tag + help icon text
+  const clone=el.cloneNode(true);
+  clone.querySelectorAll(".src-tag, .help").forEach(n=>n.remove());
+  return clone.textContent.trim();
+}
+function subSrc(el){
+  const t=el.querySelector(".src-tag");
+  return t?" ["+t.textContent.trim()+"]":"";
+}
 
-  const id=getSession(); const accs=accounts();
-  if(id && accs[id]){ enterForm(accs[id]); }
-  else { clearSession(); authMode('login'); showView('auth'); }
-  updateProgress();
-})();
+function collectPcf(){
+  const body=$("pcf-body");
+  if(!body || !body.innerHTML.trim()) return "";
+  const L=["[ 양식 1·2 통합 응답 — 수출협회 PCF 현황표 + KOTITI LCI ]"];
+  body.querySelectorAll(".track-tag, .subhead, .q, [id^='dt_']").forEach(el=>{
+    if(el.id && el.id.slice(0,3)==="dt_"){ L.push(dtCollect(el.id.slice(3))); }
+    else if(el.classList.contains("track-tag")){ L.push(""); L.push("【 "+el.innerText.trim()+" 】"); }
+    else if(el.classList.contains("subhead")){ L.push("  ▸ "+headText(el)+subSrc(el)); }
+    else { L.push("   - "+labelText(el)+"  =  "+collectAnswer(el)); }
+  });
+  L.push("");
+  return L.join("\n");
+}
+function collectResponses(){
+  const L=[];
+  L.push("탄소제로 R&D 공정별 수집 가능 데이터 점검 (응답)");
+  L.push("과제번호 RS-2026-25540842");
+  L.push("제출 일시 "+new Date().toLocaleString('ko-KR'));
+  L.push("=".repeat(46));
+  L.push("[ 작성자 · 담당자 정보 — 공통 ]");
+  L.push("소속 기관 : "+(SESSION&&SESSION.org||""));
+  L.push("담당자 성명 : "+val("name"));
+  L.push("부서 : "+(val("dept")||"-"));
+  L.push("직위 : "+(val("position")||"-"));
+  L.push("연락처 : "+val("phone"));
+  L.push("이메일 : "+val("email"));
+  L.push("");
+  const pcf=collectPcf();
+  if(pcf){ L.push(pcf); }
+  document.querySelectorAll("#track-body .track-block").forEach(blk=>{
+    const tt=blk.querySelector(".track-tag");
+    L.push("【 "+(tt?tt.innerText.trim():"공정")+" 】");
+    blk.querySelectorAll(".subhead, .q").forEach(el=>{
+      if(el.classList.contains("subhead")){ L.push("  ▸ "+headText(el)+subSrc(el)); }
+      else { L.push("   - "+labelText(el)+"  =  "+collectAnswer(el)); }
+    });
+    L.push("");
+  });
+  return L.join("\n");
+}
+function collectItems(){
+  const items=[];
+  let currentSection='', currentSub='';
+  const pcfBody=$('pcf-body');
+  if(pcfBody && pcfBody.innerHTML.trim()){
+    pcfBody.querySelectorAll(".track-tag, .subhead, .q, [id^='dt_']").forEach(el=>{
+      if(el.id && el.id.slice(0,3)==='dt_'){
+        const dtKey=el.id.slice(3);
+        const def=DT_DEFS[dtKey];
+        if(def) items.push({section:currentSection, label:(currentSub?currentSub+' > ':'')+( def.label||'표'), value:dtCollect(dtKey)});
+      } else if(el.classList.contains('track-tag')){
+        currentSection=el.innerText.trim(); currentSub='';
+      } else if(el.classList.contains('subhead')){
+        currentSub=headText(el);
+      } else {
+        items.push({section:currentSection, label:(currentSub?currentSub+' > ':'')+labelText(el), value:collectAnswer(el)});
+      }
+    });
+  }
+  document.querySelectorAll('#track-body .track-block').forEach(blk=>{
+    const tt=blk.querySelector('.track-tag');
+    currentSection=tt?tt.innerText.trim():'공정'; currentSub='';
+    blk.querySelectorAll('.subhead, .q').forEach(el=>{
+      if(el.classList.contains('subhead')){ currentSub=headText(el); }
+      else { items.push({section:currentSection, label:(currentSub?currentSub+' > ':'')+labelText(el), value:collectAnswer(el)}); }
+    });
+  });
+  return items;
+}
 
+async function submitSurvey(){
+  if(!validateQuestions()) return;
+  const contact={
+    name:val('name'),
+    dept:$('dept').value.trim(),
+    position:$('position').value.trim(),
+    phone:val('phone'),
+    email:val('email')
+  };
+  const items=collectItems();
+  $('doneOrg').textContent=SESSION.org;
+  show('step-done'); window.scrollTo(0,0);
+  if(SHEET_ENDPOINT){
+    try {
+      await postJSON({action:'submit', org:SESSION.org, contact, items, submittedAt:new Date().toISOString()});
+    } catch(err){
+      console.error('제출 전송 오류:',err);
+      const t=document.createElement('div');
+      t.textContent='시트 전송 실패 (응답은 txt로 저장 가능)';
+      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;';
+      document.body.appendChild(t); setTimeout(()=>t.remove(),4000);
+    }
+  }
+}
+function downloadTxt(){
+  const blob=new Blob([collectResponses()],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="탄소제로_데이터점검_"+(SESSION&&SESSION.org||"")+".txt"; document.body.appendChild(a); a.click(); a.remove();
+}
 </script>
 </body>
 </html>
