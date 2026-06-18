@@ -11,6 +11,11 @@ const SPREADSHEET_ID = "1X6Ol2UOHwJyiPF3nzXjh_ksracasftMQd-bS0CxeFaM";
 const SHEET_SUBMIT = "제출";
 const SHEET_MEMBER = "회원";
 
+function toKST(isoString) {
+  const d = isoString ? new Date(isoString) : new Date();
+  return Utilities.formatDate(d, "Asia/Seoul", "yyyy-MM-dd HH:mm:ss");
+}
+
 function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true, status: "CARE ID GAS online" }))
@@ -39,7 +44,7 @@ function handleSignup(body) {
     { start: 1, end: 5, bg: "#1B4DE4", fg: "#FFFFFF", label: "회원" }
   ]);
   sheet.appendRow([
-    body.createdAt || new Date().toISOString(),
+    toKST(body.createdAt),
     body.company  || "",
     body.bizno    || "",
     body.manager  || "",
@@ -113,7 +118,7 @@ function handleSubmit(body) {
   }
 
   sheet.appendRow([
-    body.submittedAt || new Date().toISOString(),
+    toKST(body.submittedAt),
     acc.company || "", acc.bizno || "", acc.manager || "", acc.email || "",
     F.write_date || "", F.w_org || "", F.w_name || "", F.w_dept || "", F.w_title || "",
     F.w_tel || "", F.w_mobile || "", F.w_fax || "", F.w_email || "",
