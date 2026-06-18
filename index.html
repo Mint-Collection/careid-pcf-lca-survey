@@ -904,7 +904,7 @@ function toast(msg){ const t=document.getElementById('toast'); document.getEleme
    SHEET_ENDPOINT: GAS 웹앱 /exec URL. 비어 있으면 전송 스킵(로컬 데모 모드).
    GAS 배포 후 아래 빈 문자열을 받은 URL로 교체하세요.
    ============================================================ */
-const SHEET_ENDPOINT = "";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxOdlJCEqOjfwLvXeGowSU_sGg6sZ4oICN09JD024kv82uC00FcglcE1Wj2p-y9mNuY/exec";
 
 async function sendToSheet(payload){
   if(!SHEET_ENDPOINT) return;
