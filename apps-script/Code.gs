@@ -11,7 +11,7 @@
  *  4. 배포 후 받은 /exec URL을 index.html 의 SHEET_ENDPOINT 에 붙여넣으세요.
  */
 
-const SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE";
+const SPREADSHEET_ID = "1X6Ol2UOHwJyiPF3nzXjh_ksracasftMQd-bS0CxeFaM";
 
 // ── 시트 이름 ──────────────────────────────────────────────
 const SHEET_SUBMIT = "제출";
