@@ -231,6 +231,32 @@
     .q-label{font-size:14px;}
     .pcf-grid{grid-template-columns:1fr;}
   }
+
+  /* 양식 다운로드 + 파일 첨부 블록 */
+  .form-block{background:#FAFAFC;border:1px solid var(--line2);border-radius:14px;padding:16px;margin-bottom:12px;}
+  .form-dl-row{margin-bottom:12px;}
+  .form-dl-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:10px;
+    font-size:14px;font-weight:600;background:var(--blue);color:#fff;text-decoration:none;transition:background .15s;}
+  .form-dl-btn:hover{background:var(--blue-dark);}
+  .form-dl-disabled{display:inline-block;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:500;
+    background:#EDEDF0;color:var(--mut);cursor:default;}
+  .form-upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;}
+  .form-file-input{position:absolute;opacity:0;width:0;height:0;}
+  .form-upload-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;
+    font-size:14px;font-weight:600;background:var(--card);border:1.5px solid var(--blue);color:var(--blue);
+    cursor:pointer;transition:all .15s;flex-shrink:0;}
+  .form-upload-btn:hover{background:#EAF3FE;}
+  .form-upload-ico{width:15px;height:15px;}
+  .form-filename{font-size:13px;color:var(--sub);word-break:break-all;}
+  .form-filename.attached{color:#1E7A46;font-weight:600;}
+  .form-clear-btn{background:none;border:1px solid var(--line2);border-radius:8px;color:var(--mut);font-size:12px;
+    font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all .14s;flex-shrink:0;}
+  .form-clear-btn:hover{border-color:var(--red);color:var(--red);}
+  .form-hint{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5;}
+  .done-files{background:#F0FAF3;border:1px solid #D6EFDE;border-radius:12px;padding:12px 15px;
+    font-size:13px;color:#1E7A46;margin-bottom:16px;text-align:left;}
+  .done-files strong{display:block;margin-bottom:6px;font-weight:700;}
+  .done-files span{display:block;margin-bottom:3px;}
 </style>
 </head>
 <body>
@@ -381,6 +407,7 @@
           <div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
           <h2>응답이 정리되었습니다</h2>
           <p><b id="doneOrg"></b> 님의 응답이 준비되었습니다.<br>아래 버튼으로 응답 내용을 내려받아 담당자에게 전달해 주세요.</p>
+          <div id="doneFiles" class="done-files hidden"></div>
           <div class="btn-row" style="margin-bottom:0">
             <button class="btn btn-ghost" onclick="goHome()">처음으로</button>
             <button class="btn btn-primary" onclick="downloadTxt()">응답 내용 내려받기 (.txt)</button>
@@ -409,6 +436,87 @@ async function postJSON(payload) {
   const res = await fetch(SHEET_ENDPOINT, { method: "POST", body: JSON.stringify(payload) });
   if (!res.ok) throw new Error("HTTP " + res.status);
   return res.json();
+}
+
+const MAX_FILE_MB = 15;    // 첨부파일 최대 용량 — 안내문/검증/제출가드 공유
+let ATTACHED_FILES = [];   // 제출 완료 후 완료 화면 첨부목록 표시용
+
+// ── 양식 파일 경로 (파일 도착 후 null → 객체로 업데이트) ──────────────────
+const FORMS = {
+  meterFlow: null,  // 도착 후: { href: "forms/측정계_공정흐름도_양식.hwp", name: "측정계_공정흐름도_양식.hwp" }
+  lci:       null,  // 도착 후: { href: "forms/LCI_투입산출_양식.xlsx",    name: "LCI_투입산출_양식.xlsx" }
+};
+
+// ── 양식 다운로드 + 파일 첨부 UI 블록 ────────────────────────────────────
+function formBlock(fileId, formDef, accept, dlLabel) {
+  const hasFile = formDef && formDef.href;
+  const dlBtn = hasFile
+    ? `<a class="form-dl-btn" href="${formDef.href}" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${dlLabel||formDef.name} 다운로드</a>`
+    : `<span class="form-dl-disabled">양식 준비 중 — 파일 도착 후 다운로드 버튼이 활성화됩니다</span>`;
+  const extHint=accept.split(',').map(function(e){return e.trim();}).join(' ');
+  return `<div class="form-block">`
+    +`<div class="form-dl-row">${dlBtn}</div>`
+    +`<div class="form-upload-row">`
+    +`<label class="form-upload-btn" for="${fileId}"><svg class="form-upload-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> 파일 첨부하기</label>`
+    +`<input type="file" id="${fileId}" class="form-file-input" accept="${accept}" data-label="${dlLabel||fileId}" onchange="onFileChange(this)">`
+    +`<span class="form-filename" id="${fileId}_fname">선택된 파일 없음</span>`
+    +`<button type="button" class="form-clear-btn hidden" id="${fileId}_clear" onclick="clearFile('${fileId}')">✕ 삭제</button>`
+    +`</div>`
+    +`<div class="form-hint">허용 형식: ${extHint} &nbsp;·&nbsp; 최대 ${MAX_FILE_MB}MB</div>`
+    +`</div>`;
+}
+function onFileChange(inp){
+  const f=inp.files[0];
+  const span=document.getElementById(inp.id+'_fname');
+  const clearBtn=document.getElementById(inp.id+'_clear');
+  if(!span) return;
+  if(f){
+    // 확장자 검증
+    const allowed=inp.accept.split(',').map(function(e){return e.trim().toLowerCase();});
+    const ext='.'+f.name.split('.').pop().toLowerCase();
+    if(allowed.length&&!allowed.includes(ext)){
+      toast('허용되지 않는 형식입니다 ('+ext+'). 허용: '+allowed.join(' '));
+      inp.value=''; span.textContent='선택된 파일 없음'; span.classList.remove('attached');
+      if(clearBtn) clearBtn.classList.add('hidden'); return;
+    }
+    // 용량 검증
+    if(f.size>MAX_FILE_MB*1024*1024){
+      toast('파일이 너무 큽니다 (최대 '+MAX_FILE_MB+'MB): '+(f.size/1024/1024).toFixed(1)+'MB');
+      inp.value=''; span.textContent='선택된 파일 없음'; span.classList.remove('attached');
+      if(clearBtn) clearBtn.classList.add('hidden'); return;
+    }
+    span.textContent=f.name+' ('+(f.size>1024*1024?(f.size/1024/1024).toFixed(1)+'MB':Math.round(f.size/1024)+'KB')+')';
+    span.classList.add('attached');
+    if(clearBtn) clearBtn.classList.remove('hidden');
+  } else {
+    span.textContent='선택된 파일 없음'; span.classList.remove('attached');
+    if(clearBtn) clearBtn.classList.add('hidden');
+  }
+}
+function clearFile(fileId){
+  const inp=document.getElementById(fileId); if(!inp) return;
+  inp.value=''; onFileChange(inp);
+}
+function readFileB64(inp){
+  return new Promise(function(resolve,reject){
+    const file=inp.files[0]; if(!file){resolve(null);return;}
+    const reader=new FileReader();
+    reader.onload=function(e){ const b64=e.target.result.split(',')[1];
+      resolve({field:inp.id,label:inp.dataset.label||inp.id,name:file.name,mimeType:file.type||'application/octet-stream',dataB64:b64}); };
+    reader.onerror=function(){ reject(new Error('파일 읽기 오류')); };
+    reader.readAsDataURL(file);
+  });
+}
+async function collectFiles(){
+  const inputs=Array.from(document.querySelectorAll('.form-file-input')); const out=[];
+  for(const inp of inputs){ if(inp.files&&inp.files[0]){ const r=await readFileB64(inp); if(r) out.push(r); } }
+  return out;
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;max-width:90vw;text-align:center;';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),4500);
 }
 
 const IC={
@@ -556,8 +664,8 @@ function hyeonhwangItems(){ return ''
   +subhead("제조 공정 개요",null,"수출협회")
   +pcfText("주요 공정명","예) 용융방사 공정")
   +pcfText("공정 소재지","예) 전북 전주시 덕진구 OOO")
-  +subhead("공정 흐름도","두 기관(KOTITI · 수출협회) 모두 요청하는 공통 항목이에요. 한 번 제출하시면 양쪽 모두에 사용됩니다.","공통")
-  +`<div class="pcf-sub">※ 공정 흐름도와 설비 사진은 별도 파일(이미지)로 제출해 주세요.</div>`
+  +subhead("공정 흐름도 + 측정계 설치현황","협회 제공 양식에 공정 흐름도와 측정계 설치현황을 작성한 후 파일을 첨부해 주세요. 두 기관(KOTITI · 수출협회) 모두 사용됩니다.","공통")
+  +formBlock("file_meter_flow",FORMS.meterFlow,".hwp,.hwpx,.pdf,.jpg,.jpeg,.png","공정흐름도·측정계 양식(.hwp)")
   +subhead("원료 투입 현황 (2025년)","제품을 만드는 데 들어간 원료의 종류와 1년간 투입량을 요약해 주세요. 상세 항목은 아래 LCI 양식의 ‘투입물’에서 다시 다룹니다.","수출협회")
   +pcfArea("원료별 연간 투입량","예) PTA 8만톤 / MEG 3만톤 / 중합 첨가제 ○○ / 방사 부원료 ○○")
   +subhead("물·에너지 투입 현황 (2025년)","공정 전체에서 1년간 사용한 에너지와 물의 양이에요. 두 기관 공통 항목이며, 사용하지 않는 항목은 비워두세요.","공통")
@@ -571,8 +679,6 @@ function hyeonhwangItems(){ return ''
     +pcfText("LNG (Nm³)","예) 1,745,339")
     +pcfText("LPG (Nm³)","-")
   +`</div>`
-  +subhead("측정계 설치 현황","공정별로 전력계·스팀유량계 등 계측기가 지금 얼마나 설치돼 있고, 추가로 설치할 계획이 있는지 적어주세요. 공정이 여러 개면 ‘행 추가’로 늘리면 됩니다.","수출협회")
-  +dtContainer("meter","측정계 행 추가")
   +subhead("PCF 산정 세부 계획",null,"수출협회")
   +pcfArea("PLC/MES 연계 및 데이터 관리 방안","예) MES에서 공정별 전력 사용량 자동 수집 / 월별 에너지 사용량 엑셀 관리 / 계측기 추가 설치 후 실측 데이터 연계 예정");
 }
@@ -582,18 +688,8 @@ function lciItems(){ return ''
   +`<div class="pcf-note">KOTITI 시험연구원이 요청하는 <b>LCI(전과정 인벤토리) 투입/산출 데이터</b> 시트입니다. <b>[공통]</b> 표시 항목은 위쪽 수출협회 현황표와 같이 사용되며, 데이터 기준년도는 <b>2025년</b>입니다. 작성 내용은 외부로 유출되지 않습니다.</div>`
   +subhead("데이터 기준년도","LCI 작성 기준이 되는 연도예요. 기본 2025년입니다.","KOTITI")
   +pcfText("데이터 기준년도","예) 2025")
-  +subhead("공정 흐름도","원료부터 제품까지의 공정 순서도예요. 위쪽 현황표에서 작성하신 공정 흐름도와 동일한 파일을 사용하시면 됩니다.","공통")
-  +`<div class="pcf-sub">※ 별도 이미지 파일로 한 번만 제출하시면 두 기관 모두에 사용됩니다.</div>`
-  +subhead("공정 설명","각 공정의 이름과 간단한 설명을 적어주세요.","KOTITI")
-  +dtContainer("proc","공정 추가")
-  +subhead("투입물 (Input)","공정에 들어가는 원료·부원료의 종류와 연간 사용량이에요. ‘구분’ 항목은 두 기관 공통이고, 물질명·양·단위·용도·수송 정보는 KOTITI LCI 전용 상세 항목입니다. 원료물질은 원산지·수송방법·운송경로도 함께 적어주세요.","KOTITI")
-  +dtContainer("input","투입물 추가")
-  +subhead("에너지 (Energy)","공정에 사용하는 전력·스팀·연료 등의 종류와 연간 사용량이에요. 위쪽 현황표의 요약값을 공정별로 세분화해 작성하시면 됩니다.","공통")
-  +dtContainer("energy","에너지 추가")
-  +subhead("유지 및 보수 (Maintenance & Repair)","설비 유지·보수에 들어가는 자재나 약품이 있으면 적어주세요. 없으면 비워두셔도 됩니다.","KOTITI")
-  +dtContainer("maint","유지보수 추가")
-  +subhead("산출물 (Output)","공정에서 나오는 제품·부산물·폐기물과 그 처리방법(매립/소각/재활용/기타)이에요.","KOTITI")
-  +dtContainer("output","산출물 추가");
+  +subhead("LCI 투입/산출 데이터","KOTITI 제공 엑셀 양식에 공정별 투입·산출 데이터를 작성한 후 파일을 첨부해 주세요. 공정 흐름도는 위쪽 현황표 양식과 동일한 파일을 사용하시면 됩니다.","KOTITI")
+  +formBlock("file_lci",FORMS.lci,".xlsx,.xls,.csv","LCI 투입산출 양식(.xlsx)");
 }
 
 /* Track contents (원사 방사/방적 공용) */
@@ -881,7 +977,6 @@ function buildQuestions(){
     $("pcf-body").innerHTML=
         trackTag(IC.gauge,"PCF 저감·산정 현황표 (수출협회)")+`<div class="card">`+hyeonhwangItems()+`</div>`
       + trackTag(IC.layers,"LCI 투입/산출 데이터 (KOTITI)")+`<div class="card">`+lciItems()+`</div>`;
-    ["meter","proc","input","energy","maint","output"].forEach(id=>dtAdd(id));
   } else {
     $("pcf-body").innerHTML="";
   }
@@ -980,6 +1075,11 @@ function collectResponses(){
     });
     L.push("");
   });
+  if(ATTACHED_FILES&&ATTACHED_FILES.length){
+    L.push("[ 첨부 파일 ]");
+    ATTACHED_FILES.forEach(function(n){ L.push("   - "+n); });
+    L.push("");
+  }
   return L.join("\n");
 }
 function collectItems(){
@@ -1014,6 +1114,18 @@ function collectItems(){
 
 async function submitSurvey(){
   if(!validateQuestions()) return;
+  // 파일 용량 선검사 (onFileChange에서 즉시 차단되나 안전망으로 유지)
+  const fileInputs=Array.from(document.querySelectorAll('.form-file-input'));
+  for(const inp of fileInputs){
+    if(inp.files&&inp.files[0]&&inp.files[0].size>MAX_FILE_MB*1024*1024){
+      toast('첨부 파일이 너무 큽니다 (최대 '+MAX_FILE_MB+'MB): '+inp.files[0].name); inp.focus(); return;
+    }
+  }
+  // 현황표 대상 기관인데 첨부 파일이 없으면 한 번 확인
+  if(SESSION.hyeonhwang){
+    const hasFile=fileInputs.some(function(inp){return inp.files&&inp.files[0];});
+    if(!hasFile && !confirm('양식 파일 첨부 없이 제출할까요?\n(나중에 별도 이메일로 전달하셔도 됩니다)')) return;
+  }
   const contact={
     name:val('name'),
     dept:$('dept').value.trim(),
@@ -1022,18 +1134,29 @@ async function submitSurvey(){
     email:val('email')
   };
   const items=collectItems();
-  $('doneOrg').textContent=SESSION.org;
-  show('step-done'); window.scrollTo(0,0);
-  if(SHEET_ENDPOINT){
-    try {
-      await postJSON({action:'submit', org:SESSION.org, contact, items, submittedAt:new Date().toISOString()});
-    } catch(err){
-      console.error('제출 전송 오류:',err);
-      const t=document.createElement('div');
-      t.textContent='시트 전송 실패 (응답은 txt로 저장 가능)';
-      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;';
-      document.body.appendChild(t); setTimeout(()=>t.remove(),4000);
+  const submitBtn=document.querySelector('#step-questions .btn-primary');
+  if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='제출 중…'; }
+  try{
+    const files=await collectFiles();
+    if(SHEET_ENDPOINT){
+      await postJSON({action:'submit',org:SESSION.org,contact,items,files,submittedAt:new Date().toISOString()});
     }
+    // 첨부목록 전역 저장 + 완료 화면 표시
+    ATTACHED_FILES=files.map(function(f){return f.name;});
+    const doneFilesEl=$('doneFiles');
+    if(doneFilesEl){
+      if(ATTACHED_FILES.length){
+        doneFilesEl.innerHTML='<strong>📎 첨부한 파일</strong>'
+          +ATTACHED_FILES.map(function(n){return '<span>'+n+'</span>';}).join('');
+        doneFilesEl.classList.remove('hidden');
+      } else { doneFilesEl.classList.add('hidden'); }
+    }
+    $('doneOrg').textContent=SESSION.org;
+    show('step-done'); window.scrollTo(0,0);
+  }catch(err){
+    console.error('제출 전송 오류:',err);
+    if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='응답 제출'; }
+    toast('전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
   }
 }
 function downloadTxt(){
