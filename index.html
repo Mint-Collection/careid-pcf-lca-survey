@@ -1121,10 +1121,13 @@ async function submitSurvey(){
       toast('첨부 파일이 너무 큽니다 (최대 '+MAX_FILE_MB+'MB): '+inp.files[0].name); inp.focus(); return;
     }
   }
-  // 현황표 대상 기관인데 첨부 파일이 없으면 한 번 확인
+  // 현황표 대상 기관인데 첨부 안 된 파일이 있으면 한 번 확인
   if(SESSION.hyeonhwang){
-    const hasFile=fileInputs.some(function(inp){return inp.files&&inp.files[0];});
-    if(!hasFile && !confirm('양식 파일 첨부 없이 제출할까요?\n(나중에 별도 이메일로 전달하셔도 됩니다)')) return;
+    const missing=fileInputs.filter(function(inp){return !inp.files||!inp.files[0];});
+    if(missing.length>0){
+      const labels=missing.map(function(inp){return '· '+(inp.dataset.label||inp.id);}).join('\n');
+      if(!confirm('첨부되지 않은 파일이 있습니다:\n'+labels+'\n\n계속 제출할까요?\n(나중에 별도 이메일로 전달하셔도 됩니다)')) return;
+    }
   }
   const contact={
     name:val('name'),
