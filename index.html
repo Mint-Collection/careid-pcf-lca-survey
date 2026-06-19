@@ -217,6 +217,9 @@
   .btn-primary:hover{background:var(--blue-dark);}
   .btn-ghost{background:var(--card);color:var(--sub);border:1px solid var(--line2);}
   .btn-ghost:hover{color:var(--text);border-color:var(--mut);}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn-loading{opacity:0.8;cursor:not-allowed;pointer-events:none;}
+  .btn-spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:7px;}
 
   .done-card{text-align:center;padding:40px 24px;}
   .done-ico{width:64px;height:64px;border-radius:50%;background:#E7F6EC;color:#1E9E54;display:flex;
@@ -451,7 +454,7 @@ const $=id=>document.getElementById(id);
 const val=id=>$(id).value.trim();
 
 // ── 시트 연동 설정 ────────────────────────────────────────────────────────
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbz5hurguJ9efJYQ1hgGmyIX3PBL0iDBswi7x6uQ06NzD0gK0m5plmMCwmjKUQXYKNw/exec";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxihOx0z48k8vx1cB1DtU0lywQaxQh8LA54B2ieLgoJPUBvGeYDeUv7Yw7jK0cLlLOW/exec";
 let SESSION = null;  // {org, tracks, hyeonhwang} — 비번 인증 후 채워짐
 
 async function postJSON(payload) {
@@ -725,6 +728,33 @@ function dtDelRow(btn){
   const tbody=btn.closest('tbody'); if(!tbody) return;
   if(tbody.querySelectorAll('tr').length<=1) return;
   btn.closest('tr').remove();
+}
+
+// 표 데이터 수집 → 구조화 배열 (Code.gs 개별 컬럼 방식 — hyeonhwang 전용)
+function dtCollectRows(id){
+  const def=LCI_TABLES[id]; if(!def) return [];
+  const tbl=document.getElementById('dt_'+id); if(!tbl) return [];
+  const tbody=tbl.querySelector('tbody'); if(!tbody) return [];
+  const leaves=lciLeafCols(def);
+  const rows=[];
+  tbody.querySelectorAll('tr').forEach(function(r){
+    const obj={};
+    var hasVal=false;
+    leaves.forEach(function(col){
+      const el=r.querySelector('[data-k="'+col.k+'"]');
+      if(!el){obj[col.k]='';return;}
+      const v=col.type==='check'?(el.checked?'O':''):el.value.trim();
+      obj[col.k]=v;
+      if(v) hasVal=true;
+    });
+    if(hasVal) rows.push(obj);
+  });
+  return rows;
+}
+function collectLciTables(){
+  var out={};
+  Object.keys(LCI_TABLES).forEach(function(id){ out[id]=dtCollectRows(id); });
+  return out;
 }
 
 // 표 데이터 수집 → 텍스트 직렬화 (collectItems / collectPcf 호출)
@@ -1209,7 +1239,8 @@ function collectItems(){
       if(el.id && el.id.slice(0,3)==='dt_'){
         const dtKey=el.id.slice(3);
         const def=LCI_TABLES[dtKey];
-        if(def) items.push({section:currentSection, label:(currentSub?currentSub+' > ':'')+( def.label||'표'), value:dtCollect(dtKey)});
+        // hyeonhwang 기관은 LCI 표를 lciTables 필드로 별도 전송 (개별 컬럼 방식)
+        if(def && !SESSION.hyeonhwang) items.push({section:currentSection, label:(currentSub?currentSub+' > ':'')+( def.label||'표'), value:dtCollect(dtKey)});
       } else if(el.classList.contains('track-tag')){
         currentSection=el.innerText.trim(); currentSub='';
       } else if(el.classList.contains('subhead')){
@@ -1255,12 +1286,13 @@ async function submitSurvey(){
     email:val('email')
   };
   const items=collectItems();
+  const lciTables=SESSION.hyeonhwang ? collectLciTables() : null;
   const submitBtn=document.querySelector('#step-questions .btn-primary');
-  if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='제출 중…'; }
+  if(submitBtn){ submitBtn.disabled=true; submitBtn.classList.add('btn-loading'); submitBtn.innerHTML='<span class="btn-spinner"></span>제출 중…'; }
   try{
     const files=await collectFiles();
     if(SHEET_ENDPOINT){
-      await postJSON({action:'submit',org:SESSION.org,contact,items,files,submittedAt:new Date().toISOString()});
+      await postJSON({action:'submit',org:SESSION.org,contact,items,lciTables,files,submittedAt:new Date().toISOString()});
     }
     // 첨부목록 전역 저장 + 완료 화면 표시
     ATTACHED_FILES=files.map(function(f){return f.name;});
@@ -1273,10 +1305,11 @@ async function submitSurvey(){
       } else { doneFilesEl.classList.add('hidden'); }
     }
     $('doneOrg').textContent=SESSION.org;
+    if(submitBtn){ submitBtn.disabled=false; submitBtn.classList.remove('btn-loading'); submitBtn.innerHTML='응답 제출'; }
     show('step-done'); window.scrollTo(0,0);
   }catch(err){
     console.error('제출 전송 오류:',err);
-    if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='응답 제출'; }
+    if(submitBtn){ submitBtn.disabled=false; submitBtn.classList.remove('btn-loading'); submitBtn.innerHTML='응답 제출'; }
     toast('전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
   }
 }
