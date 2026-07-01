@@ -1664,6 +1664,35 @@ function toggleMasterOrg(idx){
 
 function setMasterState(idx,text){ const el=document.getElementById('m-state-'+idx); if(el) el.textContent=text; }
 
+// ── Master 계정: 업체별 임시 저장 (브라우저에만, 서버 미전송) ────────────────
+function masterDraftKey(org){ return 'careid_master_draft_'+org; }
+
+function saveMasterDraft(idx){
+  const suf='m'+idx+'_';
+  const org=MASTER_SESSION.orgs[idx];
+  const yearVal=(document.getElementById(suf+'k_year')||{}).value||'';
+  const lciTables=collectLciTables(suf);
+  const draft={savedAt:new Date().toISOString(), yearVal, lciTables};
+  try{
+    localStorage.setItem(masterDraftKey(org), JSON.stringify(draft));
+    setMasterDraftStatus(idx, draft.savedAt);
+    toast(org+' 임시 저장되었습니다.');
+  }catch(e){}
+}
+function loadMasterDraft(org){
+  try{ const s=localStorage.getItem(masterDraftKey(org)); return s?JSON.parse(s):null; }catch(e){ return null; }
+}
+function clearMasterDraft(org){
+  try{ localStorage.removeItem(masterDraftKey(org)); }catch(e){}
+}
+function setMasterDraftStatus(idx, isoStr){
+  const el=document.getElementById('m-savedat-'+idx); if(!el) return;
+  if(!isoStr){ el.textContent=''; return; }
+  const d=new Date(isoStr);
+  const pad=n=>String(n).padStart(2,'0');
+  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
+}
+
 // 업체 하나의 LCA 표 폼 HTML (suf로 id 접두어를 붙여 여러 업체가 동시에 펼쳐져도 충돌하지 않음)
 function masterLcaForm(suf){ return ''
   +`<div class="q"><span class="q-label pcf-q">데이터 기준년도</span><input type="text" class="pcf-in" id="${suf}k_year" placeholder="예) 2025"></div>`
@@ -1679,30 +1708,58 @@ function masterLcaForm(suf){ return ''
   +lciTable("output", suf);
 }
 
+// 서버에서 불러온 데이터(res.body)를 폼에 채움 — items에서 "데이터 기준년도" 추출 + LCI 표 복원
+function fillMasterFormFromServer(suf, body){
+  const yearItem=((body&&body.items)||[]).find(function(it){ return it.label==='데이터 기준년도'; });
+  const yearEl=document.getElementById(suf+'k_year');
+  if(yearEl) yearEl.value=(yearItem&&yearItem.value)||'';
+  Object.keys(LCI_TABLES).forEach(function(id){
+    restoreLciTable(id, ((body&&body.lciTables)||{})[id]||[], suf);
+  });
+}
+// 임시 저장된 초안(draft)을 폼에 채움 — 서버 데이터보다 우선 적용
+function fillMasterFormFromDraft(suf, draft){
+  const yearEl=document.getElementById(suf+'k_year');
+  if(yearEl) yearEl.value=draft.yearVal||'';
+  Object.keys(LCI_TABLES).forEach(function(id){
+    restoreLciTable(id, (draft.lciTables||{})[id]||[], suf);
+  });
+}
+
 function loadMasterOrgForm(idx, org){
   const suf='m'+idx+'_';
   const body=document.getElementById('m-acc-body-'+idx); if(!body) return;
   body.innerHTML=masterLcaForm(suf)
-    +`<div class="btn-row" style="margin-bottom:0"><button type="button" class="btn btn-primary" id="m-submit-${idx}" onclick="masterSubmit(${idx})">저장·제출</button></div>`;
+    +`<div class="tab-savedat"><span id="m-savedat-${idx}"></span></div>`
+    +`<div class="btn-row" style="margin-bottom:0">`
+      +`<button type="button" class="btn btn-save" onclick="saveMasterDraft(${idx})">임시 저장</button>`
+      +`<button type="button" class="btn btn-primary" id="m-submit-${idx}" onclick="masterSubmit(${idx})">저장·제출</button>`
+    +`</div>`;
   setMasterState(idx,'불러오는 중…');
   postJSON({action:'getLca', org:org}).then(function(res){
-    if(res && res.ok && res.body){
-      MASTER_DATA[idx]=res.body;
-      const yearItem=(res.body.items||[]).find(function(it){ return it.label==='데이터 기준년도'; });
-      const yearEl=document.getElementById(suf+'k_year');
-      if(yearEl && yearItem) yearEl.value=yearItem.value||'';
-      Object.keys(LCI_TABLES).forEach(function(id){
-        restoreLciTable(id, (res.body.lciTables||{})[id]||[], suf);
-      });
+    MASTER_DATA[idx]=(res&&res.ok&&res.body)?res.body:null;
+    const draft=loadMasterDraft(org);
+    if(draft){
+      fillMasterFormFromDraft(suf, draft);
+      setMasterDraftStatus(idx, draft.savedAt);
+      setMasterState(idx, MASTER_DATA[idx] ? '이전 제출 있음 · 임시저장된 수정사항 불러옴' : '기존 제출 없음 · 임시저장된 초안 불러옴');
+    } else if(MASTER_DATA[idx]){
+      fillMasterFormFromServer(suf, MASTER_DATA[idx]);
       setMasterState(idx,'기존 데이터 불러옴 · 수정 후 저장하세요');
     } else {
-      MASTER_DATA[idx]=null;
       setMasterState(idx,'기존 제출 없음 · 새로 작성');
     }
   }).catch(function(err){
     console.error('getLca error:',err);
     MASTER_DATA[idx]=null;
-    setMasterState(idx,'불러오기 실패 · 새로 작성 가능');
+    const draft=loadMasterDraft(org);
+    if(draft){
+      fillMasterFormFromDraft(suf, draft);
+      setMasterDraftStatus(idx, draft.savedAt);
+      setMasterState(idx,'서버 데이터 조회 실패 · 임시저장된 초안 불러옴');
+    } else {
+      setMasterState(idx,'불러오기 실패 · 새로 작성 가능');
+    }
   });
 }
 
@@ -1725,6 +1782,8 @@ async function masterSubmit(idx){
       contact:prev.contact||{}, items:items, lciTables:lciTables, files:[],
       submittedAt:new Date().toISOString()
     });
+    clearMasterDraft(org);
+    setMasterDraftStatus(idx, null);
     setMasterState(idx,'저장·제출 완료');
     toast(org+' LCA 데이터가 저장되었습니다.');
   }catch(err){
