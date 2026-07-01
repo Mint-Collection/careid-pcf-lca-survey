@@ -9,6 +9,7 @@
   :root{
     --blue:#0071E3; --blue-dark:#0058B9; --text:#1D1D1F; --sub:#6E6E73; --mut:#86868B;
     --bg:#F5F5F7; --card:#FFFFFF; --line:#E5E5EA; --line2:#D2D2D7; --red:#E0303A; --r:18px;
+    --green:#1E9E54; --green-d:#1E7A46; --orange:#C2410C;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
@@ -56,6 +57,11 @@
     align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;letter-spacing:-.02em;}
   .tb-t{font-size:13px;font-weight:600;}
   .tb-s{font-size:11px;color:var(--mut);margin-top:1px;}
+  .tb-home{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--card);
+    border:1px solid var(--line2);border-radius:980px;padding:7px 13px 7px 11px;font-family:inherit;
+    font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+  .tb-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .tb-home svg{width:15px;height:15px;}
 
   main{padding:34px 0 10px;}
 
@@ -118,6 +124,54 @@
   .legend-scale b{color:var(--blue-dark);font-weight:600;}
   .legend-src{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
   .legend-src .src-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+
+  /* ===== Tabs (DPP / LCA) ===== */
+  .tabbar{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{flex:1;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:13px 13px;
+    cursor:pointer;font-family:inherit;text-align:left;transition:all .15s;display:flex;flex-direction:column;gap:7px;min-width:0;}
+  .tab:hover{border-color:var(--blue);}
+  .tab.active{border-color:var(--blue);background:#F5F9FF;box-shadow:inset 0 0 0 1px var(--blue);}
+  .tab-label{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.3;}
+  .tab.active .tab-label{color:var(--blue-dark);}
+  .tab-sub{font-size:11px;color:var(--mut);line-height:1.3;}
+  .tab-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:4px 9px;border-radius:980px;width:fit-content;}
+  .tab-badge .bdot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .badge-todo{background:#FFF1E8;color:var(--orange);}
+  .badge-done{background:#E7F6EC;color:var(--green-d);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .tab-progress{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:13px 16px;margin-bottom:4px;}
+  .tp-bar{flex:1;height:7px;background:#EDEDF0;border-radius:980px;overflow:hidden;}
+  .tp-fill{height:100%;background:var(--blue);border-radius:980px;transition:width .3s ease;width:0;}
+  .tp-num{font-weight:700;color:var(--text);font-size:12.5px;white-space:nowrap;}
+  .tab-savedat{text-align:right;margin:2px 0 12px;font-size:11px;color:var(--mut);min-height:14px;}
+
+  /* ===== 완료 상태 카드 (step-done) ===== */
+  .status-card{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;
+    padding:15px 18px;margin-bottom:12px;background:var(--card);}
+  .status-ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .status-ic svg{width:22px;height:22px;}
+  .status-ic.done{background:#E7F6EC;color:var(--green);}
+  .status-ic.todo{background:#FFF1E8;color:var(--orange);}
+  .status-info{flex:1;text-align:left;}
+  .status-name{font-size:14px;font-weight:700;}
+  .status-state{font-size:12px;margin-top:2px;}
+  .status-state.done{color:var(--green-d);}
+  .status-state.todo{color:var(--orange);}
+
+  /* ===== Master 계정 — 업체별 아코디언 ===== */
+  .m-acc{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+  .m-acc-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:none;border:none;padding:16px 18px;cursor:pointer;font-family:inherit;text-align:left;}
+  .m-acc-head:hover{background:#FAFAFC;}
+  .m-acc-name{font-size:15px;font-weight:700;color:var(--text);}
+  .m-acc-state{font-size:12px;color:var(--mut);white-space:nowrap;}
+  .m-acc-body{padding:0 18px 18px;border-top:1px solid var(--line);}
+  .m-acc-body.hidden{display:none;}
 
   /* Source tags */
   .src-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;
@@ -233,6 +287,8 @@
     .seg-opt{min-width:calc(33.33% - 5px);}
     .q-label{font-size:14px;}
     .pcf-grid{grid-template-columns:1fr;}
+    .tab{padding:12px 11px;}
+    .tab-label{font-size:12.5px;}
   }
 
   /* 양식 다운로드 + 파일 첨부 블록 */
@@ -335,6 +391,7 @@
         <div class="tb-s" id="topSub">탄소제로 R&D 데이터 점검</div>
       </div>
       <span id="draftStatus"></span>
+      <button type="button" class="tb-home" onclick="goHome()" title="처음 화면으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg><span>처음</span></button>
     </div>
   </header>
 
@@ -395,40 +452,10 @@
       <section id="step-questions" class="hidden">
         <div class="card" id="orgHeaderCard"></div>
 
-        <div class="card legend">
-          <div class="legend-title">응답 방법</div>
-          <div class="legend-row">각 항목에서 <b>지금 수집 가능한 수준</b>을 골라 주세요. 항목 옆 <b>물음표(?)</b>에 마우스를 올리면 쉬운 설명이 나옵니다.</div>
-          <div class="legend-scale">
-            <span><b>시스템 보유</b> ERP/MES에 있음</span>
-            <span><b>문서/수기</b> 일지/고지서/엑셀</span>
-            <span><b>일부만</b> 일부 또는 추정치</span>
-            <span><b>불가</b> 아직 없음</span>
-            <span><b>해당 없음</b> 우리 공정과 무관</span>
-          </div>
-          <div class="legend-row" style="margin-top:10px">에너지 항목(전력, 스팀, 용수)은 계측기가 없으므로
-            <b>설비별 / 공정 구역별 / 시설 전체(고지서) / 불가</b> 중에서 골라 주세요.
-            <b>‘불가’가 많아도 괜찮습니다. 무엇이 부족한지 파악하는 것이 목적입니다.</b></div>
+        <div class="tabbar" id="tabbar"></div>
 
-          <div class="legend-src">
-            <div class="legend-title">데이터 요청 기관 표시</div>
-            <div class="src-row">
-              <span class="src-tag src-kotiti">KOTITI</span>
-              <span class="legend-row">KOTITI 시험연구원이 요청하는 LCI 항목</span>
-            </div>
-            <div class="src-row">
-              <span class="src-tag src-export">수출협회</span>
-              <span class="legend-row">(사)한국섬유수출입협회가 요청하는 PCF 현황표 항목</span>
-            </div>
-            <div class="src-row">
-              <span class="src-tag src-both">공통</span>
-              <span class="legend-row">두 기관이 모두 요청하는 항목 — 한 번만 작성하시면 양쪽에 사용됩니다</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="pcf-body"></div>
-
-        <div id="track-body"></div>
+        <div class="tab-panel" id="panel-dpp"></div>
+        <div class="tab-panel" id="panel-lca"></div>
 
         <div class="btn-row">
           <button class="btn btn-ghost" onclick="goIntro()">이전으로</button>
@@ -447,13 +474,28 @@
         <div class="card done-card">
           <div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
           <h2>응답이 정리되었습니다</h2>
-          <p><b id="doneOrg"></b> 님의 응답이 준비되었습니다.<br>아래 버튼으로 응답 내용을 내려받아 담당자에게 전달해 주세요.</p>
+          <p><b id="doneOrg"></b> 님의 응답 현황입니다.<br>완료된 설문은 지금 제출하시고, 미완료 설문은 이어서 작성하실 수 있습니다.</p>
+          <div id="doneStatus"></div>
           <div id="doneFiles" class="done-files hidden"></div>
           <div class="btn-row" style="margin-bottom:0">
             <button class="btn btn-ghost" onclick="goHome()">처음으로</button>
             <button class="btn btn-primary" onclick="downloadTxt()">응답 내용 내려받기 (.txt)</button>
           </div>
         </div>
+        <div class="foot">
+          <div class="foot-name">윤회㈜ CARE ID</div>
+          <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
+        </div>
+      </section>
+
+      <!-- STEP MASTER -->
+      <section id="step-master" class="hidden">
+        <div class="hero">
+          <span class="hero-badge">Master 계정</span>
+          <h1>업체별 LCA<br>데이터 관리</h1>
+          <p>업체를 펼치면 기존에 제출된 LCA(LCI) 데이터를 불러옵니다. 대신 입력·수정한 뒤 <b>저장·제출</b> 버튼으로 해당 업체 시트에 반영하세요.</p>
+        </div>
+        <div id="masterAccordion"></div>
         <div class="foot">
           <div class="foot-name">윤회㈜ CARE ID</div>
           <div class="foot-line">문의 010.3484.7601 &nbsp;|&nbsp; <a href="mailto:rnd@careid.center">rnd@careid.center</a></div>
@@ -469,8 +511,9 @@ const $=id=>document.getElementById(id);
 const val=id=>$(id).value.trim();
 
 // ── 시트 연동 설정 ────────────────────────────────────────────────────────
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzJob-vv9KAFhQe52hWYykTS04n_IiXZkiVaxtEqbm6NYBgwVydlfL7SmB6aXW7I-qo/exec";
-let SESSION = null;  // {org, tracks, hyeonhwang} — 비번 인증 후 채워짐
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxiINVyRyqMerC7IYLjzKdAqXndLDC7fElE0pGh5GkmSXVDL0DIJ7bp311P_HCCe6ML/exec";
+let SESSION = null;         // {org, tracks, hyeonhwang} — 일반 계정 비번 인증 후 채워짐
+let MASTER_SESSION = null;  // {orgs:[...]} — 마스터 계정 인증 후 채워짐
 
 async function postJSON(payload) {
   if (!SHEET_ENDPOINT) throw new Error("SHEET_ENDPOINT not configured");
@@ -699,7 +742,9 @@ function lciRowHTML(leaves){
 }
 
 // 표 전체 HTML (thead 2단 + tbody 빈 1행) 생성 — lciItems()에서 innerHTML로 삽입
-function lciTable(id){
+// suf: 표 id 접두어 (Master 계정이 업체별로 여러 표 인스턴스를 동시에 렌더링할 때 id 충돌 방지용, 기본 '')
+function lciTable(id, suf){
+  suf = suf || '';
   const def=LCI_TABLES[id]; if(!def) return '';
   const leaves=lciLeafCols(def);
   // thead row 1
@@ -721,22 +766,23 @@ function lciTable(id){
   return '<div class="lci-section">'
     +'<div class="lci-section-title">'+def.label+'</div>'
     +'<div class="lci-wrap">'
-    +'<table class="lci-table" id="dt_'+id+'">'
+    +'<table class="lci-table" id="dt_'+suf+id+'">'
     +thead
     +'<tbody>'+lciRowHTML(leaves)+'</tbody>'
     +'</table>'
     +'</div>'
-    +'<button type="button" class="lci-add-btn" onclick="dtAddRow(\''+id+'\')">+ '+def.addLabel+'</button>'
+    +'<button type="button" class="lci-add-btn" onclick="dtAddRow(\''+id+'\',\''+suf+'\')">+ '+def.addLabel+'</button>'
     +'</div>';
 }
 
 // + 행 추가
-function dtAddRow(id){
+function dtAddRow(id, suf){
+  suf = suf || '';
   const def=LCI_TABLES[id]; if(!def) return;
-  const tbl=document.getElementById('dt_'+id); if(!tbl) return;
+  const tbl=document.getElementById('dt_'+suf+id); if(!tbl) return;
   const tbody=tbl.querySelector('tbody'); if(!tbody) return;
   tbody.insertAdjacentHTML('beforeend',lciRowHTML(lciLeafCols(def)));
-  scheduleSave();
+  scheduleSave(); updateStatus();
 }
 
 // 🗑 행 삭제 (최소 1행 유지)
@@ -744,13 +790,14 @@ function dtDelRow(btn){
   const tbody=btn.closest('tbody'); if(!tbody) return;
   if(tbody.querySelectorAll('tr').length<=1) return;
   btn.closest('tr').remove();
-  scheduleSave();
+  scheduleSave(); updateStatus();
 }
 
 // 표 데이터 수집 → 구조화 배열 (Code.gs 개별 컬럼 방식 — hyeonhwang 전용)
-function dtCollectRows(id){
+function dtCollectRows(id, suf){
+  suf = suf || '';
   const def=LCI_TABLES[id]; if(!def) return [];
-  const tbl=document.getElementById('dt_'+id); if(!tbl) return [];
+  const tbl=document.getElementById('dt_'+suf+id); if(!tbl) return [];
   const tbody=tbl.querySelector('tbody'); if(!tbody) return [];
   const leaves=lciLeafCols(def);
   const rows=[];
@@ -768,10 +815,22 @@ function dtCollectRows(id){
   });
   return rows;
 }
-function collectLciTables(){
+function collectLciTables(suf){
+  suf = suf || '';
   var out={};
-  Object.keys(LCI_TABLES).forEach(function(id){ out[id]=dtCollectRows(id); });
+  Object.keys(LCI_TABLES).forEach(function(id){ out[id]=dtCollectRows(id, suf); });
   return out;
+}
+function dtHasRow(id, suf){
+  suf = suf || '';
+  const tbl=document.getElementById('dt_'+suf+id); if(!tbl) return false;
+  const tbody=tbl.querySelector('tbody'); if(!tbody) return false;
+  return Array.from(tbody.querySelectorAll('tr')).some(function(r){
+    return Array.from(r.querySelectorAll('input,select')).some(function(el){
+      if(el.type==='checkbox') return el.checked;
+      return (el.value||'').trim()!=='';
+    });
+  });
 }
 
 // 표 데이터 수집 → 텍스트 직렬화 (collectItems / collectPcf 호출)
@@ -809,52 +868,21 @@ function flowImageBlock(imgSrc,fileId,accept){
     +'</div>';
 }
 
-/* ===== PCF 저감·산정 인프라 현황표 (수출협회) ===== */
-function hyeonhwangItems(){ return ''
-  +`<div class="pcf-note">(사)한국섬유수출입협회가 KIAT 제출용으로 요청하는 <b>PCF 저감계획 및 산정 인프라 현황표</b>입니다. <b>[공통]</b> 표시 항목은 한 번 작성하시면 KOTITI LCI 양식에도 사용됩니다.</div>`
-  +subhead("PCF 저감 제품 개요",null,"수출협회")
-  +seg("pcf_cat","제품 구분",["원사·실","사가공","제·편직","염색가공","봉제"],"","이 제품이 어느 공정 단계의 제품인지 골라주세요.")
-  +pcfText("제품명 (스펙)","예) PET 장섬유 (DTY 75D, S/S 잠재권축사)","대상 제품의 이름과 규격이에요.")
-  +pcfText("모델명","예) RW-2025-01")
-  +subhead("PCF 저감 계획",null,"수출협회")
-  +checklist("저감 방식 (복수 선택)","pcf_method",["리싸이클 사용","공정 대체·생략","공정 효율 개선","저온·저욕비 염색","천연물질 사용","기타 자원 절감"],"어떤 방법으로 탄소를 줄일 계획인지 모두 골라주세요.")
-  +pcfArea("저감 상세 내용","예) 용융 방사기 효율 개선을 통한 에너지 절감 / 저욕비 염색으로 용수·스팀 절감 등")
-  +subhead("제조 공정 개요",null,"수출협회")
-  +pcfText("주요 공정명","예) 용융방사 공정")
-  +pcfText("공정 소재지","예) 전북 전주시 덕진구 OOO")
-  +subhead("공정 흐름도 + 측정계 설치현황","협회 제공 양식에 공정 흐름도와 측정계 설치현황을 작성한 후 파일을 첨부해 주세요. 두 기관(KOTITI · 수출협회) 모두 사용됩니다.","공통")
-  +formBlock("file_meter_flow",FORMS.meterFlow,".hwp,.hwpx,.pdf,.jpg,.jpeg,.png","공정흐름도·측정계 양식(.hwp)")
-  +subhead("원료 투입 현황 (2025년)","제품을 만드는 데 들어간 원료의 종류와 1년간 투입량을 요약해 주세요. 상세 항목은 아래 LCI 양식의 ‘투입물’에서 다시 다룹니다.","수출협회")
-  +pcfArea("원료별 연간 투입량","예) PTA 8만톤 / MEG 3만톤 / 중합 첨가제 ○○ / 방사 부원료 ○○")
-  +subhead("물·에너지 투입 현황 (2025년)","공정 전체에서 1년간 사용한 에너지와 물의 양이에요. 두 기관 공통 항목이며, 사용하지 않는 항목은 비워두세요.","공통")
-  +`<div class="pcf-grid">`
-    +pcfText("용수 (만톤)","예) 30.2")
-    +pcfText("외부 스팀 (만톤)","예) 8.1")
-    +pcfText("전력 (kWh)","예) 3,659,779")
-    +pcfText("등유 (L)","-")
-    +pcfText("경유 (L)","예) 577")
-    +pcfText("기타 연료 (L)","-")
-    +pcfText("LNG (Nm³)","예) 1,745,339")
-    +pcfText("LPG (Nm³)","-")
-  +`</div>`
-  +subhead("PCF 산정 세부 계획",null,"수출협회")
-  +pcfArea("PLC/MES 연계 및 데이터 관리 방안","예) MES에서 공정별 전력 사용량 자동 수집 / 월별 에너지 사용량 엑셀 관리 / 계측기 추가 설치 후 실측 데이터 연계 예정");
-}
-
 /* ===== LCI 투입/산출 데이터 (KOTITI) ===== */
-function lciItems(){ return ''
-  +`<div class="pcf-note">KOTITI 시험연구원이 요청하는 <b>LCI(전과정 인벤토리) 투입/산출 데이터</b>입니다. <b>[공통]</b> 표시 항목은 위쪽 수출협회 현황표와 공유됩니다. 데이터 기준년도는 <b>2025년</b>이며, 작성 내용은 외부로 유출되지 않습니다.</div>`
+// suf: 표 id 접두어 (Master 계정이 여러 업체를 동시에 렌더링할 때 사용, 기본 '')
+function lciItems(suf){ suf = suf || ''; return ''
+  +`<div class="pcf-note">KOTITI 시험연구원이 요청하는 <b>LCI(전과정 인벤토리) 투입/산출 데이터</b>입니다. 데이터 기준년도는 <b>2025년</b>이며, 작성 내용은 외부로 유출되지 않습니다.</div>`
   +subhead("데이터 기준년도","LCI 작성 기준이 되는 연도예요. 기본 2025년입니다.","KOTITI")
   +pcfText("데이터 기준년도","예) 2025")
-  +subhead("공정 흐름도","원료부터 제품까지의 공정 순서도 파일을 첨부해 주세요. 아래 예시를 참고하여 작성하세요. 수출협회 현황표에 이미 첨부한 파일과 동일하면 생략 가능합니다.","공통")
+  +subhead("공정 흐름도","원료부터 제품까지의 공정 순서도 파일을 첨부해 주세요. 아래 예시를 참고하여 작성하세요.","KOTITI")
   +flowImageBlock("assets/process-flow-example.png","file_process_flow",".pdf,.hwp,.hwpx,.jpg,.jpeg,.png")
   +subhead("공정 설명","각 공정의 이름과 설명, 설비 및 계측기 현황을 입력해 주세요.")
-  +lciTable("proc")
+  +lciTable("proc", suf)
   +subhead("제품 단위 투입·산출물 (2025년 기준)","공정에 투입·산출되는 물질과 에너지 데이터입니다.","KOTITI")
-  +lciTable("input")
-  +lciTable("energy")
-  +lciTable("maint")
-  +lciTable("output");
+  +lciTable("input", suf)
+  +lciTable("energy", suf)
+  +lciTable("maint", suf)
+  +lciTable("output", suf);
 }
 
 /* Track contents (원사 방사/방적 공용) */
@@ -1074,10 +1102,10 @@ const TRACKS={
     +`</div>`,
 };
 
-function tc(box){ const it=box.closest(".check-item"); it.classList.toggle("checked"); const q=box.closest(".q"); if(q) q.classList.remove("q-error"); scheduleSave(); }
+function tc(box){ const it=box.closest(".check-item"); it.classList.toggle("checked"); const q=box.closest(".q"); if(q) q.classList.remove("q-error"); scheduleSave(); updateStatus(); }
 function tcEtc(box){ const it=box.closest(".check-item"); it.classList.toggle("checked");
   const e=it.parentElement.querySelector(".etc-input[data-foretc]"); if(e) e.style.display=it.classList.contains("checked")?"block":"none";
-  const q=box.closest(".q"); if(q) q.classList.remove("q-error"); scheduleSave(); }
+  const q=box.closest(".q"); if(q) q.classList.remove("q-error"); scheduleSave(); updateStatus(); }
 
 document.addEventListener("change",e=>{
   const t=e.target;
@@ -1086,9 +1114,9 @@ document.addEventListener("change",e=>{
     if(etc){ const c=document.querySelector(`input[name="${t.name}"]:checked`); etc.style.display=(c&&c.value==="기타")?"block":"none"; }
     const q=t.closest(".q"); if(q) q.classList.remove("q-error");
   }
-  scheduleSave();
+  scheduleSave(); updateStatus();
 });
-document.addEventListener("input",e=>{ if(e.target.classList&&e.target.classList.contains("etc-input")){ const q=e.target.closest(".q"); if(q) q.classList.remove("q-error"); } scheduleSave(); });
+document.addEventListener("input",e=>{ if(e.target.classList&&e.target.classList.contains("etc-input")){ const q=e.target.closest(".q"); if(q) q.classList.remove("q-error"); } scheduleSave(); updateStatus(); });
 
 async function checkPw(){
   const pw=val('pw');
@@ -1097,11 +1125,18 @@ async function checkPw(){
   btn.disabled=true; btn.textContent='확인 중...';
   try {
     const res = await postJSON({action:'auth', password:pw});
-    if(res.ok){
+    if(res.ok && res.role==='master'){
+      MASTER_SESSION=res;
+      buildMasterView();
+      $('cover').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      show('step-master');
+      window.scrollTo(0,0);
+    } else if(res.ok){
       SESSION=res;
       if($('orgDisplay')) $('orgDisplay').textContent=SESSION.org;
-      const draft=loadDraftData();
-      if(draft){ DRAFT_PENDING=draft; restoreDraftContact(draft); toast('이전에 임시 저장한 내용을 불러왔습니다.'); }
+      const draftDpp=loadDraftTab('dpp'), draftLca=loadDraftTab('lca');
+      if(draftDpp||draftLca){ DRAFT_PENDING={dpp:draftDpp,lca:draftLca}; restoreDraftContact(draftDpp||draftLca); toast('이전에 임시 저장한 내용을 불러왔습니다.'); }
       $('cover').classList.add('hidden');
       $('app').classList.remove('hidden');
       window.scrollTo(0,0);
@@ -1121,7 +1156,7 @@ async function checkPw(){
 }
 $("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") checkPw(); });
 
-function show(step){ ["step-intro","step-questions","step-done"].forEach(s=>$(s).classList.toggle("hidden",s!==step)); }
+function show(step){ ["step-intro","step-questions","step-done","step-master"].forEach(s=>{ const el=$(s); if(el) el.classList.toggle("hidden",s!==step); }); }
 
 function goQuestions(){
   const reqs=["name","phone","email"]; let ok=true, first=null;
@@ -1129,32 +1164,137 @@ function goQuestions(){
   if(!ok){ $("introMsg").style.display="block"; first.focus(); return; }
   $("introMsg").style.display="none";
   buildQuestions();
-  if(DRAFT_PENDING){ restoreDraftQuestions(DRAFT_PENDING); DRAFT_PENDING=null; }
   show("step-questions"); window.scrollTo(0,0);
 }
 function goIntro(){ show("step-intro"); window.scrollTo(0,0); }
-function goHome(){ show("step-intro"); window.scrollTo(0,0); }
+function goHome(){
+  if(MASTER_SESSION){ show("step-master"); } else { show("step-intro"); }
+  window.scrollTo(0,0);
+}
+
+/* ===== DPP 패널 — 응답 방법 안내 + 진행률 ===== */
+function dppHead(){ return ''
+  +`<div class="tab-progress"><div class="tp-bar"><div class="tp-fill" id="dpp-fill"></div></div><span class="tp-num" id="dpp-num">0 / 0</span></div>`
+  +`<div class="tab-savedat"><span id="dpp-savedAt"></span></div>`
+  +`<div class="card legend">`
+    +`<div class="legend-title">응답 방법</div>`
+    +`<div class="legend-row">각 항목에서 <b>지금 수집 가능한 수준</b>을 골라 주세요. 항목 옆 <b>물음표(?)</b>에 마우스를 올리면 쉬운 설명이 나옵니다.</div>`
+    +`<div class="legend-scale">`
+      +`<span><b>시스템 보유</b> ERP/MES에 있음</span>`
+      +`<span><b>문서/수기</b> 일지/고지서/엑셀</span>`
+      +`<span><b>일부만</b> 일부 또는 추정치</span>`
+      +`<span><b>불가</b> 아직 없음</span>`
+      +`<span><b>해당 없음</b> 우리 공정과 무관</span>`
+    +`</div>`
+    +`<div class="legend-row" style="margin-top:10px">에너지 항목(전력, 스팀, 용수)은 계측기가 없으므로 <b>설비별 / 공정 구역별 / 시설 전체(고지서) / 불가</b> 중에서 골라 주세요. <b>‘불가’가 많아도 괜찮습니다. 무엇이 부족한지 파악하는 것이 목적입니다.</b></div>`
+  +`</div>`;
+}
+/* ===== LCA 탭 — 데이터 요청 기관 안내 ===== */
+function lcaHead(){ return ''
+  +`<div class="tab-savedat"><span id="lca-savedAt"></span></div>`
+  +`<div class="card legend">`
+    +`<div class="legend-title">데이터 요청 기관 표시</div>`
+    +`<div class="legend-row">KOTITI 시험연구원이 요청하는 LCA(전과정) 데이터입니다. 아래 표에 공정별 투입·산출 정보를 입력해 주세요.</div>`
+    +`<div class="legend-src">`
+      +`<div class="src-row"><span class="src-tag src-kotiti">KOTITI</span><span class="legend-row">KOTITI 시험연구원이 요청하는 LCI 항목</span></div>`
+      +`<div class="src-row"><span class="src-tag src-both">공통</span><span class="legend-row">DPP 설문과 함께 사용되는 공통 항목</span></div>`
+    +`</div>`
+  +`</div>`;
+}
 
 function buildQuestions(){
   const org=SESSION.org;
   const tracks=SESSION.tracks||[];
-  const hyeonhwang=SESSION.hyeonhwang||false;
+  const hasLca=SESSION.hyeonhwang||false;
   $("orgHeaderCard").innerHTML=`<div class="org-header"><div class="oh-icons">${tracks.map(t=>`<div class="oh-icon">${TRACK[t].icon}</div>`).join("")}</div>`
     +`<div><div class="oh-name">${org}</div><div class="oh-stage">${tracks.map(t=>TRACK[t].name).join(" / ")}</div></div></div>`;
 
-  // 공식 양식(현황표 + LCI) — 제조 공정 보유 기관만
-  if(hyeonhwang){
-    $("pcf-body").innerHTML=
-        trackTag(IC.gauge,"PCF 저감·산정 현황표 (수출협회)")+`<div class="card">`+hyeonhwangItems()+`</div>`
-      + trackTag(IC.layers,"LCI 투입/산출 데이터 (KOTITI)")+`<div class="card">`+lciItems()+`</div>`;
+  $("panel-dpp").innerHTML=dppHead()+tracks.map(t=>`<div class="track-block">${TRACKS[t]?TRACKS[t]():""}</div>`).join("");
+
+  if(hasLca){
+    $("panel-lca").innerHTML=lcaHead()+trackTag(IC.layers,"LCI 투입/산출 데이터 (KOTITI)")+`<div class="card">`+lciItems()+`</div>`;
   } else {
-    $("pcf-body").innerHTML="";
+    $("panel-lca").innerHTML="";
   }
 
-  $("track-body").innerHTML=tracks.map(t=>`<div class="track-block">${TRACKS[t]?TRACKS[t]():""}</div>`).join("");
+  buildTabbar(true, hasLca);
+
   let sub=tracks.map(t=>TRACK[t].name).join(", ");
-  if(hyeonhwang) sub="PCF 현황표 · LCI · "+sub;
+  if(hasLca) sub="LCI · "+sub;
   $("topSub").textContent=org+"  |  "+sub;
+
+  if(DRAFT_PENDING){
+    if(DRAFT_PENDING.dpp){ restoreDraftQuestions(DRAFT_PENDING.dpp); updateTabSavedStatus('dpp',DRAFT_PENDING.dpp.savedAt); }
+    if(DRAFT_PENDING.lca){ restoreDraftQuestions(DRAFT_PENDING.lca); updateTabSavedStatus('lca',DRAFT_PENDING.lca.savedAt); }
+    DRAFT_PENDING=null;
+  }
+  updateStatus();
+}
+
+function buildTabbar(hasDpp, hasLca){
+  const tabs=[];
+  if(hasDpp) tabs.push({id:"dpp",label:"DPP 사전 준비 설문",sub:"공정별 데이터 수집 가능 점검"});
+  if(hasLca) tabs.push({id:"lca",label:"KOTITI LCA 데이터",sub:"전과정(LCI) 투입·산출"});
+  if(!tabs.length) tabs.push({id:"dpp",label:"담당자 정보",sub:"별도 문항 없음"});
+  $("tabbar").innerHTML=tabs.map(t=>
+    `<button type="button" class="tab" data-tab="${t.id}" onclick="switchTab('${t.id}')">`
+    +`<span class="tab-badge badge-todo" id="badge-${t.id}"><span class="bdot"></span>미완료</span>`
+    +`<span class="tab-label">${t.label}</span><span class="tab-sub">${t.sub}</span></button>`).join("");
+  switchTab(tabs[0].id);
+}
+function switchTab(id){
+  document.querySelectorAll("#tabbar .tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===id));
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active", p.id==="panel-"+id));
+}
+
+/* ===== 탭별 완료 상태 계산 ===== */
+function dppDone(){
+  const p=$("panel-dpp"); if(!p) return {applies:false};
+  const qs=[...p.querySelectorAll(".q")];
+  if(!qs.length) return {applies:false};
+  let done=0; qs.forEach(q=>{ if(isAnswered(q)) done++; });
+  return {applies:true,total:qs.length,done,complete:done===qs.length};
+}
+function lcaDone(){
+  const p=$("panel-lca"); if(!p||!p.innerHTML.trim()) return {applies:false};
+  const yearInput=p.querySelector(".pcf-in");
+  const yearOk=!!(yearInput&&yearInput.value.trim());
+  const flowInput=document.getElementById("file_process_flow");
+  const flowOk=!!(flowInput&&flowInput.files&&flowInput.files[0]);
+  const procOk=dtHasRow("proc"), inputOk=dtHasRow("input"), outputOk=dtHasRow("output");
+  const arr=[yearOk,flowOk,procOk,inputOk,outputOk];
+  return {applies:true,total:arr.length,done:arr.filter(Boolean).length,complete:arr.every(Boolean)};
+}
+function setBadge(id,complete){
+  const b=$("badge-"+id); if(!b) return;
+  b.className="tab-badge "+(complete?"badge-done":"badge-todo");
+  b.innerHTML='<span class="bdot"></span>'+(complete?"완료":"미완료");
+}
+function updateStatus(){
+  if(!$("tabbar")) return;
+  const d=dppDone();
+  if(d.applies){
+    setBadge("dpp", d.complete);
+    const f=$("dpp-fill"), n=$("dpp-num");
+    if(f) f.style.width=(d.total?Math.round(d.done/d.total*100):0)+"%";
+    if(n) n.textContent=d.done+" / "+d.total;
+  }
+  const k=lcaDone();
+  if(k.applies) setBadge("lca", k.complete);
+}
+function statusCard(name,complete,state){
+  const svgOk='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>';
+  const svgTodo='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
+  const ic=complete?`<div class="status-ic done">${svgOk}</div>`:`<div class="status-ic todo">${svgTodo}</div>`;
+  return `<div class="status-card">${ic}<div class="status-info"><div class="status-name">${name}</div><div class="status-state ${complete?'done':'todo'}">${state}</div></div></div>`;
+}
+function renderDoneStatus(){
+  const d=dppDone(), k=lcaDone();
+  let h="";
+  if(d.applies) h+=statusCard("DPP 사전 준비 설문", d.complete, d.complete?"작성 완료":`미완료 · ${d.done}/${d.total} 항목 응답`);
+  if(k.applies) h+=statusCard("KOTITI LCA 데이터", k.complete, k.complete?"작성 완료":`미완료 · ${k.done}/${k.total} 조건 충족`);
+  if(!h) h=statusCard("담당자 정보", true, "제출 준비 완료");
+  const el=$("doneStatus"); if(el) el.innerHTML=h;
 }
 
 function isAnswered(q){
@@ -1174,11 +1314,11 @@ function isAnswered(q){
 }
 function validateQuestions(){
   let first=null;
-  document.querySelectorAll("#track-body .q").forEach(q=>{
+  document.querySelectorAll("#panel-dpp .q").forEach(q=>{
     if(isAnswered(q)) q.classList.remove("q-error");
     else { q.classList.add("q-error"); if(!first) first=q; }
   });
-  if(first){ first.scrollIntoView({behavior:"smooth",block:"center"}); return false; }
+  if(first){ switchTab('dpp'); first.scrollIntoView({behavior:"smooth",block:"center"}); return false; }
   return true;
 }
 function collectAnswer(q){
@@ -1207,10 +1347,10 @@ function subSrc(el){
   return t?" ["+t.textContent.trim()+"]":"";
 }
 
-function collectPcf(){
-  const body=$("pcf-body");
+function collectLca(){
+  const body=$("panel-lca");
   if(!body || !body.innerHTML.trim()) return "";
-  const L=["[ 양식 1·2 통합 응답 — 수출협회 PCF 현황표 + KOTITI LCI ]"];
+  const L=["[ KOTITI LCA(LCI) 응답 ]"];
   body.querySelectorAll(".track-tag, .subhead, .q, [id^='dt_']").forEach(el=>{
     if(el.id && el.id.slice(0,3)==="dt_"){ L.push(dtCollect(el.id.slice(3))); }
     else if(el.classList.contains("track-tag")){ L.push(""); L.push("【 "+el.innerText.trim()+" 】"); }
@@ -1234,9 +1374,9 @@ function collectResponses(){
   L.push("연락처 : "+val("phone"));
   L.push("이메일 : "+val("email"));
   L.push("");
-  const pcf=collectPcf();
-  if(pcf){ L.push(pcf); }
-  document.querySelectorAll("#track-body .track-block").forEach(blk=>{
+  const lca=collectLca();
+  if(lca){ L.push(lca); }
+  document.querySelectorAll("#panel-dpp .track-block").forEach(blk=>{
     const tt=blk.querySelector(".track-tag");
     L.push("【 "+(tt?tt.innerText.trim():"공정")+" 】");
     blk.querySelectorAll(".subhead, .q").forEach(el=>{
@@ -1255,9 +1395,9 @@ function collectResponses(){
 function collectItems(){
   const items=[];
   let currentSection='', currentSub='';
-  const pcfBody=$('pcf-body');
-  if(pcfBody && pcfBody.innerHTML.trim()){
-    pcfBody.querySelectorAll(".track-tag, .subhead, .q, [id^='dt_']").forEach(el=>{
+  const lcaBody=$('panel-lca');
+  if(lcaBody && lcaBody.innerHTML.trim()){
+    lcaBody.querySelectorAll(".track-tag, .subhead, .q, [id^='dt_']").forEach(el=>{
       if(el.id && el.id.slice(0,3)==='dt_'){
         const dtKey=el.id.slice(3);
         const def=LCI_TABLES[dtKey];
@@ -1272,7 +1412,7 @@ function collectItems(){
       }
     });
   }
-  document.querySelectorAll('#track-body .track-block').forEach(blk=>{
+  document.querySelectorAll('#panel-dpp .track-block').forEach(blk=>{
     const tt=blk.querySelector('.track-tag');
     currentSection=tt?tt.innerText.trim():'공정'; currentSub='';
     blk.querySelectorAll('.subhead, .q').forEach(el=>{
@@ -1328,6 +1468,7 @@ async function submitSurvey(){
       } else { doneFilesEl.classList.add('hidden'); }
     }
     $('doneOrg').textContent=SESSION.org;
+    renderDoneStatus();
     if(submitBtn){ submitBtn.disabled=false; submitBtn.classList.remove('btn-loading'); submitBtn.innerHTML='응답 제출'; }
     show('step-done'); window.scrollTo(0,0);
   }catch(err){
@@ -1342,52 +1483,71 @@ function downloadTxt(){
   a.download="탄소제로_데이터점검_"+(SESSION&&SESSION.org||"")+".txt"; document.body.appendChild(a); a.click(); a.remove();
 }
 
-// ── 임시 저장 ────────────────────────────────────────────────────────────────
+// ── 임시 저장 (탭별) ─────────────────────────────────────────────────────────
 let _draftTimer=null;
-let DRAFT_PENDING=null;
+let DRAFT_PENDING=null;   // {dpp, lca} — 인증 직후 로드, buildQuestions에서 복원
 
-function draftKey(){ return SESSION?'careid_draft_'+SESSION.org:null; }
+function draftKey(tab){ return SESSION?'careid_draft_'+SESSION.org+'_'+tab:null; }
 
-function saveDraft(){
-  const key=draftKey(); if(!key) return;
+function collectContact(){
+  return {name:($('name')?$('name').value:''),dept:($('dept')?$('dept').value:''),
+    position:($('position')?$('position').value:''),phone:($('phone')?$('phone').value:''),
+    email:($('email')?$('email').value:'')};
+}
+
+// tab: 'dpp' | 'lca' — 해당 탭 패널 범위만 스캔하여 저장
+function saveDraftTab(tab){
+  const key=draftKey(tab); if(!key) return;
+  const scope=document.getElementById('panel-'+tab); if(!scope) return;
   const radios={};
-  document.querySelectorAll('input[type="radio"]:checked').forEach(function(r){ radios[r.name]=r.value; });
+  scope.querySelectorAll('input[type="radio"]:checked').forEach(function(r){ radios[r.name]=r.value; });
   const checks={};
-  document.querySelectorAll('.check-item[data-name]').forEach(function(it){
+  scope.querySelectorAll('.check-item[data-name]').forEach(function(it){
     const name=it.dataset.name;
     if(!checks[name]) checks[name]=[];
     if(it.classList.contains('checked')) checks[name].push(it.querySelector('.ci-label').textContent.trim());
   });
   const etcFor={},etcForEtc={};
-  document.querySelectorAll('.etc-input[data-for]').forEach(function(el){ if(el.value) etcFor[el.dataset.for]=el.value; });
-  document.querySelectorAll('.etc-input[data-foretc]').forEach(function(el){ if(el.value) etcForEtc[el.dataset.foretc]=el.value; });
-  const pcfVals=[];
-  document.querySelectorAll('#pcf-body .pcf-in').forEach(function(el){ pcfVals.push(el.value); });
-  const lciData={};
-  Object.keys(LCI_TABLES).forEach(function(id){ const rows=dtCollectRows(id); if(rows.length) lciData[id]=rows; });
-  const draft={
-    savedAt:new Date().toISOString(),
-    contact:{name:($('name')?$('name').value:''),dept:($('dept')?$('dept').value:''),
-      position:($('position')?$('position').value:''),phone:($('phone')?$('phone').value:''),
-      email:($('email')?$('email').value:'')},
-    radios,checks,etcFor,etcForEtc,pcfVals,lciData
-  };
-  try{ localStorage.setItem(key,JSON.stringify(draft)); updateDraftStatus(draft.savedAt); }catch(e){}
+  scope.querySelectorAll('.etc-input[data-for]').forEach(function(el){ if(el.value) etcFor[el.dataset.for]=el.value; });
+  scope.querySelectorAll('.etc-input[data-foretc]').forEach(function(el){ if(el.value) etcForEtc[el.dataset.foretc]=el.value; });
+  const draft={ savedAt:new Date().toISOString(), contact:collectContact(), radios,checks,etcFor,etcForEtc };
+  if(tab==='lca'){
+    const pcfVals=[];
+    scope.querySelectorAll('.pcf-in').forEach(function(el){ pcfVals.push(el.value); });
+    const lciData={};
+    Object.keys(LCI_TABLES).forEach(function(id){ const rows=dtCollectRows(id); if(rows.length) lciData[id]=rows; });
+    draft.pcfVals=pcfVals; draft.lciData=lciData;
+  }
+  try{
+    localStorage.setItem(key,JSON.stringify(draft));
+    updateDraftStatus(draft.savedAt);
+    updateTabSavedStatus(tab, draft.savedAt);
+  }catch(e){}
 }
+function saveDraft(){ saveDraftTab('dpp'); saveDraftTab('lca'); }
 
-function loadDraftData(){
-  const key=draftKey(); if(!key) return null;
+function loadDraftTab(tab){
+  const key=draftKey(tab); if(!key) return null;
   try{ const s=localStorage.getItem(key); return s?JSON.parse(s):null; }catch(e){ return null; }
 }
 
 function clearDraft(){
-  const key=draftKey(); if(!key) return;
-  try{ localStorage.removeItem(key); }catch(e){}
+  ['dpp','lca'].forEach(function(tab){
+    const key=draftKey(tab); if(!key) return;
+    try{ localStorage.removeItem(key); }catch(e){}
+    const el=document.getElementById(tab+'-savedAt'); if(el) el.textContent='';
+  });
   const el=document.getElementById('draftStatus'); if(el) el.textContent='';
 }
 
 function updateDraftStatus(isoStr){
   const el=document.getElementById('draftStatus'); if(!el) return;
+  const d=new Date(isoStr);
+  const pad=n=>String(n).padStart(2,'0');
+  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
+}
+function updateTabSavedStatus(tab,isoStr){
+  const el=document.getElementById(tab+'-savedAt'); if(!el||!isoStr) return;
   const d=new Date(isoStr);
   const pad=n=>String(n).padStart(2,'0');
   el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
@@ -1398,6 +1558,7 @@ function restoreDraftContact(draft){
   ['name','dept','position','phone','email'].forEach(function(id){ if($(id)&&draft.contact[id]!==undefined) $(id).value=draft.contact[id]; });
 }
 
+// draft: saveDraftTab()이 만든 단일 탭 draft 객체 (dpp 또는 lca)
 function restoreDraftQuestions(draft){
   if(!draft) return;
   if(draft.radios){
@@ -1435,7 +1596,7 @@ function restoreDraftQuestions(draft){
     });
   }
   if(draft.pcfVals){
-    const pcfEls=document.querySelectorAll('#pcf-body .pcf-in');
+    const pcfEls=document.querySelectorAll('#panel-lca .pcf-in');
     pcfEls.forEach(function(el,i){ if(draft.pcfVals[i]) el.value=draft.pcfVals[i]; });
   }
   if(draft.lciData){
@@ -1443,9 +1604,10 @@ function restoreDraftQuestions(draft){
   }
 }
 
-function restoreLciTable(id,rows){
+function restoreLciTable(id,rows,suf){
+  suf=suf||'';
   const def=LCI_TABLES[id]; if(!def) return;
-  const tbl=document.getElementById('dt_'+id); if(!tbl) return;
+  const tbl=document.getElementById('dt_'+suf+id); if(!tbl) return;
   const tbody=tbl.querySelector('tbody'); if(!tbody) return;
   const leaves=lciLeafCols(def);
   tbody.innerHTML='';
@@ -1470,6 +1632,107 @@ function scheduleSave(){
 function manualSaveDraft(){
   saveDraft();
   toast('임시 저장되었습니다.');
+}
+
+// ── Master 계정: 업체별 LCA 데이터 조회·수정 ────────────────────────────────
+let MASTER_DATA={};    // idx → getLca로 불러온 이전 제출 payload (RAW_JSON)
+let MASTER_LOADED={};  // idx → 이미 폼을 그렸는지 여부
+
+function buildMasterView(){
+  const orgs=MASTER_SESSION.orgs||[];
+  $("masterAccordion").innerHTML=orgs.map(function(org,idx){
+    return '<div class="m-acc" id="m-acc-'+idx+'">'
+      +'<button type="button" class="m-acc-head" onclick="toggleMasterOrg('+idx+')">'
+        +'<span class="m-acc-name">'+org+'</span>'
+        +'<span class="m-acc-state" id="m-state-'+idx+'">펼쳐서 불러오기</span>'
+      +'</button>'
+      +'<div class="m-acc-body hidden" id="m-acc-body-'+idx+'"></div>'
+    +'</div>';
+  }).join('');
+  MASTER_DATA={}; MASTER_LOADED={};
+}
+
+function toggleMasterOrg(idx){
+  const body=document.getElementById('m-acc-body-'+idx); if(!body) return;
+  const willOpen=body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  if(willOpen && !MASTER_LOADED[idx]){
+    MASTER_LOADED[idx]=true;
+    loadMasterOrgForm(idx, MASTER_SESSION.orgs[idx]);
+  }
+}
+
+function setMasterState(idx,text){ const el=document.getElementById('m-state-'+idx); if(el) el.textContent=text; }
+
+// 업체 하나의 LCA 표 폼 HTML (suf로 id 접두어를 붙여 여러 업체가 동시에 펼쳐져도 충돌하지 않음)
+function masterLcaForm(suf){ return ''
+  +`<div class="q"><span class="q-label pcf-q">데이터 기준년도</span><input type="text" class="pcf-in" id="${suf}k_year" placeholder="예) 2025"></div>`
+  +subhead("공정 설명")
+  +lciTable("proc", suf)
+  +subhead("투입물 (Input)")
+  +lciTable("input", suf)
+  +subhead("에너지 (Energy)")
+  +lciTable("energy", suf)
+  +subhead("유지 및 보수 (Maintenance & Repair)")
+  +lciTable("maint", suf)
+  +subhead("산출물 (Output)")
+  +lciTable("output", suf);
+}
+
+function loadMasterOrgForm(idx, org){
+  const suf='m'+idx+'_';
+  const body=document.getElementById('m-acc-body-'+idx); if(!body) return;
+  body.innerHTML=masterLcaForm(suf)
+    +`<div class="btn-row" style="margin-bottom:0"><button type="button" class="btn btn-primary" id="m-submit-${idx}" onclick="masterSubmit(${idx})">저장·제출</button></div>`;
+  setMasterState(idx,'불러오는 중…');
+  postJSON({action:'getLca', org:org}).then(function(res){
+    if(res && res.ok && res.body){
+      MASTER_DATA[idx]=res.body;
+      const yearItem=(res.body.items||[]).find(function(it){ return it.label==='데이터 기준년도'; });
+      const yearEl=document.getElementById(suf+'k_year');
+      if(yearEl && yearItem) yearEl.value=yearItem.value||'';
+      Object.keys(LCI_TABLES).forEach(function(id){
+        restoreLciTable(id, (res.body.lciTables||{})[id]||[], suf);
+      });
+      setMasterState(idx,'기존 데이터 불러옴 · 수정 후 저장하세요');
+    } else {
+      MASTER_DATA[idx]=null;
+      setMasterState(idx,'기존 제출 없음 · 새로 작성');
+    }
+  }).catch(function(err){
+    console.error('getLca error:',err);
+    MASTER_DATA[idx]=null;
+    setMasterState(idx,'불러오기 실패 · 새로 작성 가능');
+  });
+}
+
+async function masterSubmit(idx){
+  const suf='m'+idx+'_';
+  const org=MASTER_SESSION.orgs[idx];
+  const btn=document.getElementById('m-submit-'+idx);
+  if(btn){ btn.disabled=true; btn.classList.add('btn-loading'); btn.innerHTML='<span class="btn-spinner"></span>저장 중…'; }
+  try{
+    const prev=MASTER_DATA[idx]||{};
+    const lciTables=collectLciTables(suf);
+    const yearVal=(document.getElementById(suf+'k_year')||{}).value||'';
+    const items=(prev.items||[]).slice();
+    const yi=items.findIndex(function(it){ return it.label==='데이터 기준년도'; });
+    const yearItem={section:'LCI 투입/산출 데이터 (KOTITI)', label:'데이터 기준년도', value:yearVal};
+    if(yi>=0) items[yi]=yearItem; else items.push(yearItem);
+    // Master 수정 제출은 파일을 재첨부하지 않음 — 첨부 링크는 원본 제출 이력에 남아있음
+    await postJSON({
+      action:'submit', org:org,
+      contact:prev.contact||{}, items:items, lciTables:lciTables, files:[],
+      submittedAt:new Date().toISOString()
+    });
+    setMasterState(idx,'저장·제출 완료');
+    toast(org+' LCA 데이터가 저장되었습니다.');
+  }catch(err){
+    console.error('master submit error:',err);
+    toast('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+  } finally {
+    if(btn){ btn.disabled=false; btn.classList.remove('btn-loading'); btn.innerHTML='저장·제출'; }
+  }
 }
 </script>
 </body>
