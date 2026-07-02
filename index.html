@@ -495,6 +495,16 @@
           <h1>업체별 LCA<br>데이터 관리</h1>
           <p>업체를 펼치면 기존에 제출된 LCA(LCI) 데이터를 불러옵니다. 대신 입력·수정한 뒤 <b>저장·제출</b> 버튼으로 해당 업체 시트에 반영하세요.</p>
         </div>
+        <div class="card">
+          <div class="card-h">작성자(수정자) 정보</div>
+          <div class="card-sub">업체별로 따로 입력하지 않고, 여기 한 번만 입력하면 모든 업체 저장·제출에 공통으로 사용됩니다. 실제로 어떤 업체 데이터를 대신 입력했는지 기록에 남기기 위해 필요합니다.</div>
+          <div class="field"><label>담당자 성명</label><input id="m_name" type="text" placeholder="예) 홍길동"></div>
+          <div class="field"><label>부서 <span class="opt">(선택)</span></label><input id="m_dept" type="text" placeholder="예) 운영팀"></div>
+          <div class="field"><label>직위 <span class="opt">(선택)</span></label><input id="m_position" type="text" placeholder="예) 매니저"></div>
+          <div class="field"><label>연락처</label><input id="m_phone" type="tel" placeholder="예) 010-1234-5678"></div>
+          <div class="field"><label>이메일</label><input id="m_email" type="email" placeholder="예) name@company.com"></div>
+          <div class="intro-msg" id="masterIntroMsg">담당자 성명·연락처·이메일을 입력해 주세요.</div>
+        </div>
         <div id="masterAccordion"></div>
         <div class="foot">
           <div class="foot-name">윤회㈜ CARE ID</div>
@@ -584,14 +594,20 @@ function readFileB64(inp){
   return new Promise(function(resolve,reject){
     const file=inp.files[0]; if(!file){resolve(null);return;}
     const reader=new FileReader();
+    // data-field: DOM id는 Master 화면에서 업체별로 접두어가 붙어 고유하지만,
+    // Code.gs의 ATTACH_SLOTS는 접두어 없는 field 이름으로 매칭하므로 별도 지정 가능하게 함.
     reader.onload=function(e){ const b64=e.target.result.split(',')[1];
-      resolve({field:inp.id,label:inp.dataset.label||inp.id,name:file.name,mimeType:file.type||'application/octet-stream',dataB64:b64}); };
+      resolve({field:(inp.dataset.field||inp.id),label:inp.dataset.label||inp.id,name:file.name,mimeType:file.type||'application/octet-stream',dataB64:b64}); };
     reader.onerror=function(){ reject(new Error('파일 읽기 오류')); };
     reader.readAsDataURL(file);
   });
 }
 async function collectFiles(){
-  const inputs=Array.from(document.querySelectorAll('.form-file-input')); const out=[];
+  return collectFilesIn(document);
+}
+async function collectFilesIn(scopeEl){
+  if(!scopeEl) return [];
+  const inputs=Array.from(scopeEl.querySelectorAll('.form-file-input')); const out=[];
   for(const inp of inputs){ if(inp.files&&inp.files[0]){ const r=await readFileB64(inp); if(r) out.push(r); } }
   return out;
 }
@@ -853,14 +869,18 @@ function dtCollect(id){
 }
 
 // 공정 흐름도 예시이미지 + 파일첨부 블록 (다운로드 버튼 없음)
-function flowImageBlock(imgSrc,fileId,accept){
+// fieldName: 서버 전송용 field 이름(생략 시 fileId와 동일). Master 화면처럼 fileId에 업체별
+// 접두어를 붙여 DOM id 충돌을 피하면서도, 서버(Code.gs ATTACH_SLOTS)에는 접두어 없는
+// 공통 field 이름으로 전송해야 할 때 사용.
+function flowImageBlock(imgSrc,fileId,accept,fieldName){
+  fieldName = fieldName || fileId;
   const extHint=accept.split(',').map(function(e){return e.trim();}).join(' ');
   const img=imgSrc?'<div class="flow-example"><p class="flow-example-label">📋 작성 예시</p><img src="'+imgSrc+'" class="flow-example-img" alt="공정흐름도 예시"></div>':'';
   return '<div class="flow-image-block">'
     +img
     +'<div class="form-upload-row">'
     +'<label class="form-upload-btn" for="'+fileId+'"><svg class="form-upload-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> 파일 첨부하기</label>'
-    +'<input type="file" id="'+fileId+'" class="form-file-input" accept="'+accept+'" data-label="공정 흐름도" onchange="onFileChange(this)">'
+    +'<input type="file" id="'+fileId+'" class="form-file-input" accept="'+accept+'" data-label="공정 흐름도" data-field="'+fieldName+'" onchange="onFileChange(this)">'
     +'<span class="form-filename" id="'+fileId+'_fname">선택된 파일 없음</span>'
     +'<button type="button" class="form-clear-btn hidden" id="'+fileId+'_clear" onclick="clearFile(\''+fileId+'\')">✕ 삭제</button>'
     +'</div>'
@@ -1114,9 +1134,14 @@ document.addEventListener("change",e=>{
     if(etc){ const c=document.querySelector(`input[name="${t.name}"]:checked`); etc.style.display=(c&&c.value==="기타")?"block":"none"; }
     const q=t.closest(".q"); if(q) q.classList.remove("q-error");
   }
+  if(t.id && t.id.slice(0,2)==='m_') scheduleMasterContactSave();
   scheduleSave(); updateStatus();
 });
-document.addEventListener("input",e=>{ if(e.target.classList&&e.target.classList.contains("etc-input")){ const q=e.target.closest(".q"); if(q) q.classList.remove("q-error"); } scheduleSave(); updateStatus(); });
+document.addEventListener("input",e=>{
+  if(e.target.classList&&e.target.classList.contains("etc-input")){ const q=e.target.closest(".q"); if(q) q.classList.remove("q-error"); }
+  if(e.target.id && e.target.id.slice(0,2)==='m_') scheduleMasterContactSave();
+  scheduleSave(); updateStatus();
+});
 
 async function checkPw(){
   const pw=val('pw');
@@ -1128,6 +1153,7 @@ async function checkPw(){
     if(res.ok && res.role==='master'){
       MASTER_SESSION=res;
       buildMasterView();
+      restoreMasterContactDraft();
       $('cover').classList.add('hidden');
       $('app').classList.remove('hidden');
       show('step-master');
@@ -1696,6 +1722,8 @@ function setMasterDraftStatus(idx, isoStr){
 // 업체 하나의 LCA 표 폼 HTML (suf로 id 접두어를 붙여 여러 업체가 동시에 펼쳐져도 충돌하지 않음)
 function masterLcaForm(suf){ return ''
   +`<div class="q"><span class="q-label pcf-q">데이터 기준년도</span><input type="text" class="pcf-in" id="${suf}k_year" placeholder="예) 2025"></div>`
+  +subhead("공정 흐름도 (파일 첨부)","기존 첨부 파일은 불러오지 않습니다. 새로 첨부하면 이번 저장·제출에 반영됩니다.")
+  +flowImageBlock(null, suf+"file_process_flow", ".pdf,.hwp,.hwpx,.jpg,.jpeg,.png", "file_process_flow")
   +subhead("공정 설명")
   +lciTable("proc", suf)
   +subhead("투입물 (Input)")
@@ -1708,11 +1736,21 @@ function masterLcaForm(suf){ return ''
   +lciTable("output", suf);
 }
 
+// items 배열에서 "데이터 기준년도" 항목의 인덱스들을 찾음.
+// collectItems()가 subhead(섹션명)+필드명을 " > "로 이어붙이므로 실제 라벨은
+// "데이터 기준년도 > 데이터 기준년도" 형태 — 부분 일치로 찾아야 함.
+function findYearItemIndexes(items){
+  const out=[];
+  (items||[]).forEach(function(it,i){ if(it.label && it.label.indexOf('데이터 기준년도')>=0) out.push(i); });
+  return out;
+}
+
 // 서버에서 불러온 데이터(res.body)를 폼에 채움 — items에서 "데이터 기준년도" 추출 + LCI 표 복원
 function fillMasterFormFromServer(suf, body){
-  const yearItem=((body&&body.items)||[]).find(function(it){ return it.label==='데이터 기준년도'; });
+  const items=(body&&body.items)||[];
+  const idxs=findYearItemIndexes(items);
   const yearEl=document.getElementById(suf+'k_year');
-  if(yearEl) yearEl.value=(yearItem&&yearItem.value)||'';
+  if(yearEl) yearEl.value=(idxs.length?items[idxs[0]].value:'')||'';
   Object.keys(LCI_TABLES).forEach(function(id){
     restoreLciTable(id, ((body&&body.lciTables)||{})[id]||[], suf);
   });
@@ -1763,9 +1801,50 @@ function loadMasterOrgForm(idx, org){
   });
 }
 
+// Master 세션 전체에서 공통으로 쓰는 작성자(수정자) 정보 — 업체별로 따로 받지 않음.
+// 어떤 업체 데이터를 실제로 누가 대신 입력했는지 기록에 남기기 위해 필수 항목으로 검증한다.
+function collectMasterContact(){
+  return {name:val('m_name'), dept:$('m_dept').value.trim(), position:$('m_position').value.trim(),
+    phone:val('m_phone'), email:val('m_email')};
+}
+// 작성자(수정자) 정보도 업체별 임시저장과 별개로, 브라우저에 임시 저장/복원한다.
+function masterContactDraftKey(){ return 'careid_master_contact'; }
+let _masterContactTimer=null;
+function saveMasterContactDraft(){
+  try{ localStorage.setItem(masterContactDraftKey(), JSON.stringify(collectMasterContact())); }catch(e){}
+}
+function scheduleMasterContactSave(){
+  if(_masterContactTimer) clearTimeout(_masterContactTimer);
+  _masterContactTimer=setTimeout(saveMasterContactDraft, 800);
+}
+function restoreMasterContactDraft(){
+  try{
+    const s=localStorage.getItem(masterContactDraftKey()); if(!s) return;
+    const c=JSON.parse(s);
+    ['name','dept','position','phone','email'].forEach(function(k){
+      const el=$('m_'+k); if(el && c[k]!==undefined) el.value=c[k];
+    });
+  }catch(e){}
+}
+function validateMasterContact(){
+  const reqs=["m_name","m_phone","m_email"]; let ok=true, first=null;
+  reqs.forEach(function(id){ const el=$(id); if(!el.value.trim()){ el.classList.add("err"); ok=false; if(!first) first=el; } else el.classList.remove("err"); });
+  const msg=$("masterIntroMsg");
+  if(!ok){
+    if(msg) msg.style.display="block";
+    if(first) first.focus();
+    first.closest(".card").scrollIntoView({behavior:"smooth",block:"center"});
+    return false;
+  }
+  if(msg) msg.style.display="none";
+  return true;
+}
+
 async function masterSubmit(idx){
+  if(!validateMasterContact()){ toast('작성자(수정자) 정보를 먼저 입력해 주세요.'); return; }
   const suf='m'+idx+'_';
   const org=MASTER_SESSION.orgs[idx];
+  const bodyEl=document.getElementById('m-acc-body-'+idx);
   const btn=document.getElementById('m-submit-'+idx);
   if(btn){ btn.disabled=true; btn.classList.add('btn-loading'); btn.innerHTML='<span class="btn-spinner"></span>저장 중…'; }
   try{
@@ -1773,13 +1852,22 @@ async function masterSubmit(idx){
     const lciTables=collectLciTables(suf);
     const yearVal=(document.getElementById(suf+'k_year')||{}).value||'';
     const items=(prev.items||[]).slice();
-    const yi=items.findIndex(function(it){ return it.label==='데이터 기준년도'; });
-    const yearItem={section:'LCI 투입/산출 데이터 (KOTITI)', label:'데이터 기준년도', value:yearVal};
-    if(yi>=0) items[yi]=yearItem; else items.push(yearItem);
-    // Master 수정 제출은 파일을 재첨부하지 않음 — 첨부 링크는 원본 제출 이력에 남아있음
+    const yearIdxs=findYearItemIndexes(items);
+    if(yearIdxs.length){
+      // 기존 라벨 형식을 유지한 채 값만 교체. 혹시 과거 버그로 중복 추가된 항목이 있으면
+      // 첫 번째만 남기고 나머지는 제거해 lciMetaItems 컬럼 수가 원래 헤더와 어긋나지 않게 함.
+      items[yearIdxs[0]]={...items[yearIdxs[0]], value:yearVal};
+      for(let i=yearIdxs.length-1;i>=1;i--){ items.splice(yearIdxs[i],1); }
+    } else {
+      items.push({section:'LCI 투입/산출 데이터 (KOTITI)', label:'데이터 기준년도 > 데이터 기준년도', value:yearVal});
+    }
+    // 이 업체 아코디언 범위 안의 파일만 수집 — 다른 업체가 동시에 열려 있어도 서로 섞이지 않음.
+    // 기존 첨부는 불러오지 않으므로, 새로 첨부하지 않으면 이번 행의 첨부 컬럼은 비어있게 됨.
+    const files=await collectFilesIn(bodyEl);
+    // contact는 원본 업체 담당자가 아니라, 이 데이터를 대신 입력한 Master 작성자 정보로 기록한다.
     await postJSON({
       action:'submit', org:org,
-      contact:prev.contact||{}, items:items, lciTables:lciTables, files:[],
+      contact:collectMasterContact(), items:items, lciTables:lciTables, files:files,
       submittedAt:new Date().toISOString()
     });
     clearMasterDraft(org);
