@@ -498,6 +498,7 @@
         <div class="card">
           <div class="card-h">작성자(수정자) 정보</div>
           <div class="card-sub">업체별로 따로 입력하지 않고, 여기 한 번만 입력하면 모든 업체 저장·제출에 공통으로 사용됩니다. 실제로 어떤 업체 데이터를 대신 입력했는지 기록에 남기기 위해 필요합니다.</div>
+          <div class="tab-savedat" style="text-align:left;margin:0 0 12px"><span id="masterContactSavedAt">입력하면 자동 저장됩니다</span></div>
           <div class="field"><label>담당자 성명</label><input id="m_name" type="text" placeholder="예) 홍길동"></div>
           <div class="field"><label>부서 <span class="opt">(선택)</span></label><input id="m_dept" type="text" placeholder="예) 운영팀"></div>
           <div class="field"><label>직위 <span class="opt">(선택)</span></label><input id="m_position" type="text" placeholder="예) 매니저"></div>
@@ -534,6 +535,10 @@ async function postJSON(payload) {
 
 const MAX_FILE_MB = 15;    // 첨부파일 최대 용량 — 안내문/검증/제출가드 공유
 let ATTACHED_FILES = [];   // 제출 완료 후 완료 화면 첨부목록 표시용
+
+// 자동저장/수동저장 여부를 사용자가 헷갈리지 않도록 안내하는 공통 문구
+const AUTO_SAVE_HINT = '입력하면 자동 저장됩니다';
+const MANUAL_SAVE_HINT = "'임시 저장' 버튼을 눌러야 저장됩니다";
 
 // ── 양식 파일 경로 (파일 도착 후 null → 객체로 업데이트) ──────────────────
 const FORMS = {
@@ -1201,7 +1206,7 @@ function goHome(){
 /* ===== DPP 패널 — 응답 방법 안내 + 진행률 ===== */
 function dppHead(){ return ''
   +`<div class="tab-progress"><div class="tp-bar"><div class="tp-fill" id="dpp-fill"></div></div><span class="tp-num" id="dpp-num">0 / 0</span></div>`
-  +`<div class="tab-savedat"><span id="dpp-savedAt"></span></div>`
+  +`<div class="tab-savedat"><span id="dpp-savedAt">${AUTO_SAVE_HINT}</span></div>`
   +`<div class="card legend">`
     +`<div class="legend-title">응답 방법</div>`
     +`<div class="legend-row">각 항목에서 <b>지금 수집 가능한 수준</b>을 골라 주세요. 항목 옆 <b>물음표(?)</b>에 마우스를 올리면 쉬운 설명이 나옵니다.</div>`
@@ -1217,7 +1222,7 @@ function dppHead(){ return ''
 }
 /* ===== LCA 탭 — 데이터 요청 기관 안내 ===== */
 function lcaHead(){ return ''
-  +`<div class="tab-savedat"><span id="lca-savedAt"></span></div>`
+  +`<div class="tab-savedat"><span id="lca-savedAt">${AUTO_SAVE_HINT}</span></div>`
   +`<div class="card legend">`
     +`<div class="legend-title">데이터 요청 기관 표시</div>`
     +`<div class="legend-row">KOTITI 시험연구원이 요청하는 LCA(전과정) 데이터입니다. 아래 표에 공정별 투입·산출 정보를 입력해 주세요.</div>`
@@ -1561,7 +1566,7 @@ function clearDraft(){
   ['dpp','lca'].forEach(function(tab){
     const key=draftKey(tab); if(!key) return;
     try{ localStorage.removeItem(key); }catch(e){}
-    const el=document.getElementById(tab+'-savedAt'); if(el) el.textContent='';
+    const el=document.getElementById(tab+'-savedAt'); if(el) el.textContent=AUTO_SAVE_HINT;
   });
   const el=document.getElementById('draftStatus'); if(el) el.textContent='';
 }
@@ -1570,13 +1575,15 @@ function updateDraftStatus(isoStr){
   const el=document.getElementById('draftStatus'); if(!el) return;
   const d=new Date(isoStr);
   const pad=n=>String(n).padStart(2,'0');
-  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
+  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 자동저장됨';
 }
+// 입력할 때마다 디바운스로 자동 저장되는 항목(DPP/LCA 탭)용 — "자동저장됨"으로 표시해
+// 사용자가 버튼을 안 눌러도 저장되고 있음을 알 수 있게 함.
 function updateTabSavedStatus(tab,isoStr){
   const el=document.getElementById(tab+'-savedAt'); if(!el||!isoStr) return;
   const d=new Date(isoStr);
   const pad=n=>String(n).padStart(2,'0');
-  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
+  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 자동저장됨';
 }
 
 function restoreDraftContact(draft){
@@ -1711,9 +1718,11 @@ function loadMasterDraft(org){
 function clearMasterDraft(org){
   try{ localStorage.removeItem(masterDraftKey(org)); }catch(e){}
 }
+// 업체별 LCA 데이터는 자동저장이 아니라 "임시 저장" 버튼을 눌러야만 저장되므로,
+// 버튼을 누르기 전에는 그 사실을 안내하는 문구를 보여준다.
 function setMasterDraftStatus(idx, isoStr){
   const el=document.getElementById('m-savedat-'+idx); if(!el) return;
-  if(!isoStr){ el.textContent=''; return; }
+  if(!isoStr){ el.textContent=MANUAL_SAVE_HINT; return; }
   const d=new Date(isoStr);
   const pad=n=>String(n).padStart(2,'0');
   el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 임시저장됨';
@@ -1768,7 +1777,7 @@ function loadMasterOrgForm(idx, org){
   const suf='m'+idx+'_';
   const body=document.getElementById('m-acc-body-'+idx); if(!body) return;
   body.innerHTML=masterLcaForm(suf)
-    +`<div class="tab-savedat"><span id="m-savedat-${idx}"></span></div>`
+    +`<div class="tab-savedat"><span id="m-savedat-${idx}">${MANUAL_SAVE_HINT}</span></div>`
     +`<div class="btn-row" style="margin-bottom:0">`
       +`<button type="button" class="btn btn-save" onclick="saveMasterDraft(${idx})">임시 저장</button>`
       +`<button type="button" class="btn btn-primary" id="m-submit-${idx}" onclick="masterSubmit(${idx})">저장·제출</button>`
@@ -1811,7 +1820,11 @@ function collectMasterContact(){
 function masterContactDraftKey(){ return 'careid_master_contact'; }
 let _masterContactTimer=null;
 function saveMasterContactDraft(){
-  try{ localStorage.setItem(masterContactDraftKey(), JSON.stringify(collectMasterContact())); }catch(e){}
+  const draft={savedAt:new Date().toISOString(), contact:collectMasterContact()};
+  try{
+    localStorage.setItem(masterContactDraftKey(), JSON.stringify(draft));
+    updateMasterContactSavedStatus(draft.savedAt);
+  }catch(e){}
 }
 function scheduleMasterContactSave(){
   if(_masterContactTimer) clearTimeout(_masterContactTimer);
@@ -1820,11 +1833,19 @@ function scheduleMasterContactSave(){
 function restoreMasterContactDraft(){
   try{
     const s=localStorage.getItem(masterContactDraftKey()); if(!s) return;
-    const c=JSON.parse(s);
+    const draft=JSON.parse(s);
+    const c=draft.contact||{};
     ['name','dept','position','phone','email'].forEach(function(k){
       const el=$('m_'+k); if(el && c[k]!==undefined) el.value=c[k];
     });
+    updateMasterContactSavedStatus(draft.savedAt);
   }catch(e){}
+}
+function updateMasterContactSavedStatus(isoStr){
+  const el=$('masterContactSavedAt'); if(!el||!isoStr) return;
+  const d=new Date(isoStr);
+  const pad=n=>String(n).padStart(2,'0');
+  el.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+' 자동저장됨';
 }
 function validateMasterContact(){
   const reqs=["m_name","m_phone","m_email"]; let ok=true, first=null;
